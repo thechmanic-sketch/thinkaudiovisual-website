@@ -1,10 +1,24 @@
 ---
-// Text-based recreation of the Think Audio Visual wordmark.
-// TODO(owner): replace with the official vector logo (SVG) when available.
-interface Props { compact?: boolean }
-const { compact = false } = Astro.props;
+// Official Think Audio Visual logo, traced to vector from the client's artwork.
+// "think audio" uses currentColor (dark in light mode, white in dark mode); bars + VISUAL stay brand green.
+import paths from '../assets/brand/logo-paths.json';
+interface Props { class?: string; animate?: boolean }
+const { class: cls = 'h-11 sm:h-12', animate = true } = Astro.props;
 ---
-<span class="inline-flex flex-col leading-none select-none" aria-label="Think Audio Visual">
-  <span class:list={['font-display text-ink tracking-[.06em] whitespace-nowrap', compact ? 'text-[26px]' : 'text-[22px] sm:text-[30px]']}>THINK AUDIO VISUAL</span>
-  {!compact && <span class="hidden sm:block font-spec text-signal-ink text-[9px] tracking-[.14em] mt-1 whitespace-nowrap">SOUND | AV | SCREENS | STAGING | LIGHTING</span>}
-</span>
+<svg
+  class:list={['tav-logo w-auto text-ink', animate && 'tav-logo--anim', cls]}
+  viewBox="60 36 1720 740"
+  role="img"
+  aria-label="think audio visual"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path class="tav-logo__text" fill="currentColor" fill-rule="evenodd" d={paths.text} />
+  <path class="tav-logo__green" fill="#2DC410" fill-rule="evenodd" d={paths.green} />
+</svg>
+
+<style>
+  .tav-logo { display: block; overflow: visible; }
+  /* Subtle hover: the green bars brighten and lift like an equaliser */
+  .tav-logo--anim .tav-logo__green { transform-box: fill-box; transform-origin: 50% 100%; transition: filter .4s ease, transform .5s cubic-bezier(.2,.7,.2,1); }
+  :global(a:hover) > .tav-logo--anim .tav-logo__green { filter: brightness(1.25) drop-shadow(0 0 6px rgba(45,196,16,.6)); }
+</style>

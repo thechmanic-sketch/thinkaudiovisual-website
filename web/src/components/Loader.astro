@@ -1,4 +1,5 @@
 ---
+import Logo from './Logo.astro';
 // First-visit loader: a live audio waveform that plays for ~3 s, then the stage "opens".
 // Shown once per browser session; later page visits skip it.
 const bars = Array.from({ length: 56 }, (_, i) => {
@@ -11,7 +12,7 @@ const bars = Array.from({ length: 56 }, (_, i) => {
 ---
 <div id="site-loader" class="force-dark" role="status" aria-label="Loading Think Audio Visual">
   <div class="loader-inner">
-    <p class="loader-logo font-display">THINK AUDIO VISUAL</p>
+    <div class="loader-logo"><Logo class="h-20 sm:h-28 mx-auto" animate={false} /></div>
 
     <div class="wave" aria-hidden="true">
       {bars.map((b) => <span style={`--h:${b.h}%;--d:${b.delay}s`}></span>)}
@@ -40,8 +41,7 @@ const bars = Array.from({ length: 56 }, (_, i) => {
   :global(html.show-loader:not(.loader-done)) body { overflow: hidden; }
 
   .loader-inner { width: min(640px, 86vw); }
-  .loader-logo { color: #fff; font-size: clamp(32px, 6vw, 56px); letter-spacing: .08em; text-align: center; margin-bottom: 28px;
-    animation: logo-in .9s cubic-bezier(.2,.7,.2,1) both; }
+  .loader-logo { color: #fff; text-align: center; margin-bottom: 32px; animation: logo-in 1.1s cubic-bezier(.2,.7,.2,1) both; }
 
   .wave { position: relative; height: 120px; display: flex; align-items: center; gap: 4px; }
   .wave span { flex: 1; height: var(--h); background: linear-gradient(180deg, #5B8CFF, #2EF906); border-radius: 1px; transform-origin: center;
@@ -59,7 +59,7 @@ const bars = Array.from({ length: 56 }, (_, i) => {
   @keyframes draw { to { stroke-dashoffset: 0; } }
   @keyframes sway { from { transform: scaleY(.6); } to { transform: scaleY(1.2); } }
   @keyframes fill { to { transform: scaleX(1); } }
-  @keyframes logo-in { from { opacity: 0; letter-spacing: .3em; } to { opacity: 1; letter-spacing: .08em; } }
+  @keyframes logo-in { from { opacity: 0; transform: scale(.94); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
 </style>
 
 <script>

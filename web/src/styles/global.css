@@ -59,6 +59,8 @@ html[data-theme='dark'] .map-embed { filter: grayscale(1) invert(.9) hue-rotate(
 
 @layer base {
   html { scroll-behavior: smooth; }
+  /* Slide-in reveals start off-screen; clip (not hidden) keeps the sticky hero working */
+  html, body { overflow-x: clip; }
   body {
     background: var(--color-stage);
     color: var(--color-platinum);
