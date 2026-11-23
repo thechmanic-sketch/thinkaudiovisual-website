@@ -1,0 +1,36 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import QuoteCta from '../../components/QuoteCta.astro';
+import { services } from '../../data/site';
+import { heroSlides, serviceImage } from '../../data/images';
+---
+<BaseLayout
+  title="Event Equipment Hire Durban | Sound, AV, Stage & Lighting | Think AV"
+  description="Hire PA systems, projectors, screens, stages and event lighting in Durban & KZN, with professional setup included. Request a quote today."
+  breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Services', href: '/services/' }]}
+>
+  <PageHero eyebrow="Services · Durban & KZN" title="Event Equipment Hire in Durban" lead="Sound first, and everything around it: screens, stages and lighting from one reliable team." slides={heroSlides.services} />
+
+  <section class="section">
+    <div class="container-stage space-y-24">
+      {services.map((s, i) => (
+        <article class:list={['grid gap-10 lg:grid-cols-2 items-center reveal', i % 2 === 1 && 'lg:[&>*:first-child]:order-2']}>
+          <Image src={serviceImage[s.slug].src} alt={serviceImage[s.slug].alt} widths={[640, 960, 1400]} sizes="(min-width:1024px) 50vw, 100vw" class="w-full h-auto border border-cable" />
+          <div>
+            <p class="spec !text-signal-ink mb-3">{s.spec}</p>
+            <h2 class="h2">{s.title}</h2>
+            <p class="lead mt-4">{s.blurb}</p>
+            <ul class="mt-6 grid sm:grid-cols-2 gap-x-6 border-t border-cable">
+              {s.items.map((item) => <li class="py-2 border-b border-cable text-sm">{item}</li>)}
+            </ul>
+            <a href={`/services/${s.slug}/`} class="btn btn-secondary mt-8">View {s.short.toLowerCase()}</a>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <QuoteCta />
+</BaseLayout>

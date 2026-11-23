@@ -1,0 +1,70 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import QuoteCta from '../components/QuoteCta.astro';
+import { heroSlides } from '../data/images';
+
+// TODO(owner): replace with real years + milestones.
+const timeline = [
+  { year: '20XX', text: 'Think Audio Visual founded in Durban by Mr T. Masango.' },
+  { year: '20XX', text: 'First major conference and live-event contracts.' },
+  { year: '20XX', text: 'Investment in JBL professional sound systems.' },
+  { year: 'Today', text: 'Sound, AV, staging and lighting for events across KwaZulu-Natal.' },
+];
+const values = [
+  ['Integrity', 'Honest, friendly and skilled professionals who are passionate about quality, so you keep coming back.'],
+  ['Cost-effective', 'We find the most cost-effective solution so you get quality service at a reasonable price.'],
+  ['Quality', 'We research and recommend the right equipment to deliver the best possible result within your budget.'],
+  ['On time', 'We deliver the result you need in the shortest possible time.'],
+];
+---
+<BaseLayout
+  title="About Think Audio Visual | Durban Sound & AV Company"
+  description="Led by director T. Masango, Think Audio Visual has 10+ years' experience delivering reliable sound, AV, staging and lighting across Durban and KZN."
+  breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'About', href: '/about/' }]}
+>
+  <PageHero eyebrow="About us" title="10+ years powering Durban's events" lead="Reliable at all times: it's not a slogan, it's how we work." slides={heroSlides.about} />
+
+  <section class="section">
+    <div class="container-stage grid gap-12 lg:grid-cols-2">
+      <div class="reveal">
+        <p class="spec mb-3">Our story</p>
+        <h2 class="h2">Led by Mr T. Masango</h2>
+        <div class="prose-stage mt-6 text-haze">
+          <p>Under the management of a skilled and experienced owner-director, Mr T. Masango, our clients are guaranteed optimum service at all times.</p>
+          <p>More than ten years in sound and audio visual reflects real dedication and passion for the industry, from intimate meetings to large outdoor concerts.</p>
+          <p class="text-platinum">Our vision: to become the most renowned professional audio visual company in South Africa.</p>
+        </div>
+        {/* TODO(owner): add a real portrait photo of Mr Masango here */}
+      </div>
+      <ol class="border-l border-cable pl-8 space-y-10 reveal">
+        {timeline.map((t) => (
+          <li class="relative"><span class="absolute -left-[37px] top-1.5 w-2 h-2 bg-signal"></span><p class="spec !text-signal-ink">{t.year}</p><p class="mt-1">{t.text}</p></li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section bg-case border-y border-cable">
+    <div class="container-stage">
+      <p class="spec mb-3">Mission</p>
+      <h2 class="h2 mb-10">What we promise every client</h2>
+      <div class="grid gap-px bg-cable border border-cable md:grid-cols-3">
+        {['Reliable service at all times.', 'The correct equipment for your event, recommended honestly.', 'A good relationship with every client, big or small.'].map((m, i) => (
+          <div class="bg-case p-8"><p class="font-display text-5xl text-signal-ink">0{i + 1}</p><p class="h3 text-ink mt-3">{m}</p></div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container-stage">
+      <p class="spec mb-3">Core values</p>
+      <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 mt-6">
+        {values.map(([t, d]) => <div class="border-t border-cable pt-6 reveal"><h3 class="h3 text-ink">{t}</h3><p class="text-haze mt-2 text-sm">{d}</p></div>)}
+      </div>
+    </div>
+  </section>
+
+  <QuoteCta />
+</BaseLayout>

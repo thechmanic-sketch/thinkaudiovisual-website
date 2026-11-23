@@ -1,0 +1,18 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+interface Props { href: string; spec: string; title: string; blurb: string; image: ImageMetadata; alt: string }
+const { href, spec, title, blurb, image, alt } = Astro.props;
+---
+<a href={href} class="card group block reveal">
+  <div class="relative aspect-[16/10] overflow-hidden">
+    <Image src={image} alt={alt} widths={[480, 800, 1200]} sizes="(min-width:1024px) 25vw, (min-width:640px) 50vw, 100vw" class="card-img h-full w-full object-cover" />
+    <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-case to-transparent"></div>
+  </div>
+  <div class="p-6">
+    <p class="spec mb-3">{spec}</p>
+    <h3 class="h3 text-ink">{title}</h3>
+    <p class="mt-2 text-sm text-haze">{blurb}</p>
+    <span class="link-arrow inline-block mt-4 text-sm">Learn more</span>
+  </div>
+</a>

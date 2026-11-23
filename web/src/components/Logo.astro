@@ -1,0 +1,10 @@
+---
+// Text-based recreation of the Think Audio Visual wordmark.
+// TODO(owner): replace with the official vector logo (SVG) when available.
+interface Props { compact?: boolean }
+const { compact = false } = Astro.props;
+---
+<span class="inline-flex flex-col leading-none select-none" aria-label="Think Audio Visual">
+  <span class:list={['font-display text-ink tracking-[.06em] whitespace-nowrap', compact ? 'text-[26px]' : 'text-[22px] sm:text-[30px]']}>THINK AUDIO VISUAL</span>
+  {!compact && <span class="hidden sm:block font-spec text-signal-ink text-[9px] tracking-[.14em] mt-1 whitespace-nowrap">SOUND | AV | SCREENS | STAGING | LIGHTING</span>}
+</span>

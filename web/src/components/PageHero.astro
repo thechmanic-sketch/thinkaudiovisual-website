@@ -1,0 +1,43 @@
+---
+// Page hero: cross-fading slideshow with continuous zoom + pan (Ken Burns), masked headline reveal.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Slide { src: ImageMetadata; alt: string }
+interface Props { eyebrow: string; title: string; lead?: string; slides: Slide[]; cta?: boolean }
+const { eyebrow, title, lead, slides, cta = true } = Astro.props;
+// Split the title into 2–3 lines for the rising-line animation
+const words = title.split(' ');
+const per = Math.ceil(words.length / (words.length > 6 ? 3 : 2));
+const lines = Array.from({ length: Math.ceil(words.length / per) }, (_, i) => words.slice(i * per, i * per + per).join(' '));
+---
+<section class="force-dark relative min-h-[85vh] flex items-end overflow-hidden">
+  <div class="absolute inset-0" data-slideshow="6500">
+    {slides.map((s, i) => (
+      <div class:list={['kb-slide', i === 0 && 'is-active']}>
+        <Image src={s.src} alt={i === 0 ? s.alt : ''} widths={[768, 1280, 1920, 2560]} sizes="100vw" loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} />
+      </div>
+    ))}
+  </div>
+  <div class="absolute inset-0 overlay-stage"></div>
+  <div class="hero-fade-top"></div>
+  <div class="hero-fade"></div>
+  <div class="container-stage relative pb-24 pt-32">
+    <p class="spec !text-signal-ink mb-4 load-rise" style="--d:.15s">{eyebrow}</p>
+    <h1 class="display max-w-[18ch]">
+      {lines.map((l, i) => <span class="load-line" style={`--d:${0.25 + i * 0.12}s`}><span>{l}</span></span>)}
+    </h1>
+    {lead && <p class="lead mt-6 load-rise" style={`--d:${0.4 + lines.length * 0.12}s`}>{lead}</p>}
+    {cta && (
+      <div class="mt-8 flex flex-wrap gap-3 load-rise" style={`--d:${0.55 + lines.length * 0.12}s`} data-hero-cta>
+        <a href="/contact/" class="btn btn-primary">Get a Quote</a>
+        <slot name="secondary" />
+      </div>
+    )}
+  </div>
+  {slides.length > 1 && (
+    <div class="absolute bottom-10 right-8 hidden md:flex gap-2 z-10" aria-hidden="true">
+      {slides.map(() => <span class="w-8 h-px bg-platinum/40"></span>)}
+    </div>
+  )}
+</section>

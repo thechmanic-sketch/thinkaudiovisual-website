@@ -1,0 +1,188 @@
+---
+// "Descent flyby" hero (see DESIGN.md §5).
+// Desktop: a 300vh sticky section scrubs the all-keyframe video by scroll position.
+// Phones / Save-Data / visitor switched motion off: seamless 8 s loop (crossfaded, no jump) + headline.
+import { whatsappHref } from '../data/site';
+---
+<section id="flyby" class="force-dark relative" style="height:300vh" aria-label="Think Audio Visual introduction">
+  <div class="sticky top-0 h-screen overflow-hidden">
+    <video
+      id="flyby-video"
+      data-bg
+      class="absolute inset-0 h-full w-full object-cover"
+      muted
+      playsinline
+      preload="auto"
+      poster="/video/hero-flyby-loop-poster.jpg"
+    ></video>
+    <div class="absolute inset-0 overlay-stage"></div>
+    <div class="hero-fade-top"></div>
+    <div class="hero-fade"></div>
+
+    <!-- Words synced to the video frames: each word sits on the thing it names -->
+    <p data-phase="0" class="phase word word-sound display-xl" aria-hidden="true">Sound.</p>
+    <p data-phase="1" class="phase word word-stage display-xl" aria-hidden="true">Stage.</p>
+    <p data-phase="2" class="phase word word-light display-xl" aria-hidden="true">Light.</p>
+
+    <div class="absolute inset-0 flex items-center">
+      <div class="container-stage relative">
+        <div data-phase="3" class="phase phase-final" id="hero-final">
+          <p class="spec !text-signal-ink mb-4 flex items-center gap-3"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>Durban · KwaZulu-Natal · Since 20XX</p>
+          <h1 class="display-xl max-w-[14ch]">
+            <span class="line-mask"><span>Sound Hire &amp;</span></span>
+            <span class="line-mask"><span>Event AV in</span></span>
+            <span class="line-mask"><span>Durban</span></span>
+          </h1>
+          <p class="lead mt-6">PA systems, line arrays, screens, stages and lighting for conferences, weddings, churches and live events. Reliable at all times.</p>
+          <div class="mt-8 flex flex-wrap gap-3" data-hero-cta>
+            <a href="/contact/" class="btn btn-primary">Get a Quote</a>
+            <a href={whatsappHref} target="_blank" rel="noopener" class="btn btn-secondary">WhatsApp us</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button id="flyby-pause" hidden aria-pressed="false" class="absolute bottom-24 left-4 md:left-8 z-10 spec !text-platinum border border-cable bg-stage/60 px-3 py-2 hover:border-platinum">Pause video</button>
+
+    <div id="scroll-hint" class="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 spec !text-platinum flex flex-col items-center gap-2">
+      Scroll
+      <span class="block w-px h-10 bg-platinum/60 animate-pulse"></span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .phase { opacity: 0; transition: opacity .5s var(--ease-stage), transform .8s var(--ease-stage), filter .6s; pointer-events: none; }
+  .phase.on { opacity: 1; pointer-events: auto; }
+
+  /* Final headline block */
+  .phase-final { position: absolute; inset-inline: 16px; top: 50%; transform: translateY(-46%); transition-duration: .25s; }
+  .phase-final.on { transition: opacity .7s var(--ease-stage) .25s, transform .9s var(--ease-stage) .25s; }
+  .word:not(.on) { transition-duration: .25s; }
+  @media (min-width: 768px) { .phase-final { inset-inline: 32px; } }
+  .phase-final.on { transform: translateY(-50%); }
+  /* Desktop: keep the headline in the left column so the logo on the stage screen stays visible */
+  @media (min-width: 768px) {
+    .phase-final { right: auto; max-width: min(36vw, 560px); }
+    .phase-final h1 { font-size: clamp(56px, 6.2vw, 96px); }
+    .phase-final .lead { font-size: 16px; }
+  }
+
+  /* Words, positioned on the matching part of the frame */
+  .word { position: absolute; margin: 0; line-height: .85; white-space: nowrap; }
+  /* SOUND: beside the hanging line-array speaker (top-left of the opening frame) */
+  .word-sound { left: clamp(120px, 15vw, 260px); top: 22%; transform: translateX(-30px); }
+  .word-sound.on { transform: none; }
+  .word-sound::before { content: ''; position: absolute; left: -48px; top: 50%; width: 36px; height: 2px; background: var(--color-signal); }
+  /* STAGE: standing ON the stage floor — bottom edge sits on the floor line, tracked per frame (JS sets --floor-y and --stage-s) */
+  .word-stage { left: 50%; top: var(--floor-y, 60%); transform-origin: 50% 100%; transform: translate(-50%, -100%) scale(var(--stage-s, .7)); transition: opacity .5s var(--ease-stage), filter .6s; text-shadow: 0 18px 30px rgba(0,0,0,.55); }
+  .word-stage::after { content: ''; position: absolute; left: 4%; right: 4%; bottom: -2px; height: 2px; background: linear-gradient(90deg, transparent, rgba(91,140,255,.9), rgba(46,249,6,.9), transparent); }
+  /* LIGHT: bursts in with the beams, glowing */
+  .word-light { left: 50%; top: 24%; transform: translate(-50%, -50%) scale(1.25); filter: blur(10px); font-size: clamp(80px, 13vw, 180px); }
+  .word-light.on { transform: translate(-50%, -50%) scale(1); filter: blur(0); text-shadow: 0 0 30px rgba(91,140,255,.8), 0 0 80px rgba(46,249,6,.35); }
+  .phase.on .line-mask > span { transform: none; }
+  .phase .line-mask:nth-child(2) > span { transition-delay: .1s; }
+  .phase .line-mask:nth-child(3) > span { transition-delay: .2s; }
+  #flyby.static { height: 100vh !important; }
+  #flyby.static .word { display: none; }
+  /* Phones: same result from CSS alone, before any JavaScript runs */
+  @media (max-width: 767px) {
+    #flyby { height: 100svh !important; }
+    #flyby .word, #flyby #scroll-hint { display: none; }
+    #flyby .phase-final { opacity: 1; pointer-events: auto; }
+    #flyby .phase-final .line-mask > span { transform: none; }
+    /* Sit below the logo on the stage screen (logo is ~45% down the frame) */
+    #flyby .container-stage { position: static; }
+    #flyby .phase-final { position: absolute; top: auto !important; bottom: 28px; transform: none !important; }
+    #flyby .phase-final h1 { font-size: clamp(40px, 11.5vw, 48px); }
+    #flyby .phase-final .lead { font-size: 15px; margin-top: 12px; }
+    #flyby .phase-final [data-hero-cta] { margin-top: 18px; }
+    #flyby .phase-final .btn { padding: 14px 18px; font-size: 13px; }
+    #flyby-pause { top: 76px; bottom: auto !important; left: auto !important; right: 16px; }
+  }
+  /* Phones/static: headline must show even before/without JS timing */
+  #flyby.static .phase-final { opacity: 1; pointer-events: auto; }
+  #flyby.static .phase-final .line-mask > span { transform: none; }
+  #flyby.static #scroll-hint { display: none; }
+</style>
+
+<script>
+  const section = document.getElementById('flyby')!;
+  const video = document.getElementById('flyby-video') as HTMLVideoElement;
+  const phases = [...section.querySelectorAll<HTMLElement>('.phase')];
+  const hint = document.getElementById('scroll-hint')!;
+
+  const motionOff = document.documentElement.classList.contains('motion-off');
+  const small = window.matchMedia('(max-width: 767px)').matches;
+  const saveData = (navigator as any).connection?.saveData === true;
+
+  if (small || saveData || motionOff) {
+    // Simple mode: seamless loop (last frame crossfades into the first, so there is no jump).
+    section.classList.add('static');
+    phases.forEach((p) => p.classList.toggle('on', p.dataset.phase === '3'));
+    if (!saveData) {
+      video.innerHTML = '<source src="/video/hero-flyby-loop.webm" type="video/webm"><source src="/video/hero-flyby-loop.mp4" type="video/mp4">';
+      video.loop = true;
+      video.load();
+      if (!motionOff) { video.autoplay = true; video.play().catch(() => {}); }
+      const btn = document.getElementById('flyby-pause')!;
+      btn.hidden = false;
+      const sync = () => { btn.textContent = video.paused ? 'Play video' : 'Pause video'; btn.setAttribute('aria-pressed', String(video.paused)); };
+      sync(); video.addEventListener('play', sync); video.addEventListener('pause', sync);
+      btn.addEventListener('click', () => (video.paused ? video.play() : video.pause()));
+    }
+  } else {
+    video.innerHTML = '<source src="/video/hero-flyby-scrub.mp4" type="video/mp4">';
+    video.load();
+    // Timings measured from the video (seconds): speakers 0–2, run to stage 2–7.3,
+    // beams fire at ~7.4 (brightness jump), headline from 8.8.
+    // v2 video (measured): speaker 0–1.8 s, over the sound desk to 3.5 s (still "Sound"),
+    // glide to the stage 3.55–5.1 s, first beams fire at ~5.1 s, hold on logo + crowd from ~7.5 s.
+    const T = { stage: 3.55, light: 5.1, final: 7.5 };
+    const stageWord = section.querySelector<HTMLElement>('.word-stage')!;
+    // Stage-floor line measured from the video: [seconds, y% of frame height]  (filled from frame analysis)
+    const FLOOR: [number, number][] = [[3.25, 16], [3.65, 22], [4.05, 29], [4.45, 36], [4.84, 43], [5.1, 47]];
+    // Word size grows as the camera approaches: [seconds, scale]
+    const SCALE: [number, number][] = [[3.55, 0.55], [5.1, 1.0]];
+    const lerpTable = (tbl: [number, number][], x: number) => {
+      if (x <= tbl[0][0]) return tbl[0][1];
+      for (let i = 1; i < tbl.length; i++) if (x <= tbl[i][0]) {
+        const [x0, y0] = tbl[i - 1], [x1, y1] = tbl[i];
+        return y0 + ((x - x0) / (x1 - x0)) * (y1 - y0);
+      }
+      return tbl[tbl.length - 1][1];
+    };
+    let target = 0, current = 0, ticking = false;
+
+    const progress = () => {
+      const r = section.getBoundingClientRect();
+      const total = section.offsetHeight - window.innerHeight;
+      return Math.min(1, Math.max(0, -r.top / total));
+    };
+
+    const render = () => {
+      current += (target - current) * 0.16; // ease toward the scroll target for smooth scrubbing
+      const dur = video.duration || 10.04;
+      const t = current * (dur - 0.05);
+      if (video.duration) video.currentTime = t;
+      // Phase follows the frame actually shown, so words never drift from the picture
+      const active = t < T.stage ? 0 : t < T.light ? 1 : t < T.final ? 2 : 3;
+      phases.forEach((el) => el.classList.toggle('on', Number(el.dataset.phase) === active));
+      // Track the stage floor line in the frame (y as % of video height), corrected for object-fit: cover cropping
+      const fy = lerpTable(FLOOR, t);
+      const vw = innerWidth, vh = innerHeight, ar = 16 / 9;
+      const scaleH = Math.max(vh, vw / ar);                 // rendered video height
+      const yPx = (vh - scaleH) / 2 + (fy / 100) * scaleH;   // floor line in viewport px
+      stageWord.style.setProperty('--floor-y', `${yPx}px`);
+      stageWord.style.setProperty('--stage-s', String(lerpTable(SCALE, t)));
+      hint.style.opacity = target > 0.04 ? '0' : '1';
+      if (Math.abs(target - current) > 0.0005) requestAnimationFrame(render); else ticking = false;
+    };
+
+    const onScroll = () => { target = progress(); if (!ticking) { ticking = true; requestAnimationFrame(render); } };
+    video.addEventListener('loadedmetadata', onScroll);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    onScroll();
+  }
+</script>

@@ -1,0 +1,87 @@
+---
+// First-visit loader: a live audio waveform that plays for ~3 s, then the stage "opens".
+// Shown once per browser session; later page visits skip it.
+const bars = Array.from({ length: 56 }, (_, i) => {
+  // Shape like a real waveform envelope: louder in the middle, with some variation
+  const env = Math.sin((i / 55) * Math.PI);
+  const h = Math.round(18 + env * 70 + ((i * 37) % 17));
+  const delay = ((i * 53) % 100) / 100;
+  return { h, delay };
+});
+---
+<div id="site-loader" class="force-dark" role="status" aria-label="Loading Think Audio Visual">
+  <div class="loader-inner">
+    <p class="loader-logo font-display">THINK AUDIO VISUAL</p>
+
+    <div class="wave" aria-hidden="true">
+      {bars.map((b) => <span style={`--h:${b.h}%;--d:${b.delay}s`}></span>)}
+      <svg class="wave-line" viewBox="0 0 600 80" preserveAspectRatio="none">
+        <path d="M0 40 Q 25 5 50 40 T 100 40 T 150 40 T 200 40 T 250 40 T 300 40 T 350 40 T 400 40 T 450 40 T 500 40 T 550 40 T 600 40" />
+      </svg>
+    </div>
+
+    <div class="loader-meta">
+      <span class="spec">Sound check</span>
+      <span class="spec" id="loader-pct">000%</span>
+    </div>
+    <div class="loader-bar"><i></i></div>
+  </div>
+</div>
+
+<style>
+  #site-loader {
+    position: fixed; inset: 0; z-index: 200; display: none; place-items: center;
+    background: radial-gradient(ellipse at 50% 60%, #12141c 0%, #0B0C0E 70%);
+    transition: clip-path 1s cubic-bezier(.76,0,.24,1), opacity .6s ease;
+    clip-path: inset(0 0 0 0);
+  }
+  :global(html.show-loader) #site-loader { display: grid; }
+  :global(html.loader-done) #site-loader { clip-path: inset(0 0 100% 0); pointer-events: none; }
+  :global(html.show-loader:not(.loader-done)) body { overflow: hidden; }
+
+  .loader-inner { width: min(640px, 86vw); }
+  .loader-logo { color: #fff; font-size: clamp(32px, 6vw, 56px); letter-spacing: .08em; text-align: center; margin-bottom: 28px;
+    animation: logo-in .9s cubic-bezier(.2,.7,.2,1) both; }
+
+  .wave { position: relative; height: 120px; display: flex; align-items: center; gap: 4px; }
+  .wave span { flex: 1; height: var(--h); background: linear-gradient(180deg, #5B8CFF, #2EF906); border-radius: 1px; transform-origin: center;
+    animation: bar 0.9s ease-in-out infinite alternate; animation-delay: calc(var(--d) * -1s); opacity: .9; }
+  .wave-line { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; mix-blend-mode: screen; }
+  .wave-line path { fill: none; stroke: #ECEDF0; stroke-width: 1.5; stroke-dasharray: 900; stroke-dashoffset: 900; animation: draw 3s linear forwards, sway 1.2s ease-in-out infinite alternate; opacity: .6; }
+
+  .loader-meta { display: flex; justify-content: space-between; margin-top: 24px; }
+  .loader-meta .spec { color: #A3A7B0; }
+  .loader-bar { height: 2px; background: #2C2F35; margin-top: 10px; overflow: hidden; }
+  .loader-bar i { display: block; height: 100%; width: 100%; transform-origin: 0 50%; transform: scaleX(0);
+    background: linear-gradient(90deg, #5B8CFF, #2EF906); animation: fill 3s linear forwards; }
+
+  @keyframes bar { from { transform: scaleY(.15); } to { transform: scaleY(1); } }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes sway { from { transform: scaleY(.6); } to { transform: scaleY(1.2); } }
+  @keyframes fill { to { transform: scaleX(1); } }
+  @keyframes logo-in { from { opacity: 0; letter-spacing: .3em; } to { opacity: 1; letter-spacing: .08em; } }
+</style>
+
+<script>
+  const root = document.documentElement;
+  if (root.classList.contains('show-loader')) {
+    const pct = document.getElementById('loader-pct')!;
+    const DURATION = root.classList.contains('motion-off') ? 800 : 3000;
+    const t0 = performance.now();
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - t0) / DURATION);
+      pct.textContent = String(Math.round(p * 100)).padStart(3, '0') + '%';
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+    const finish = () => {
+      root.classList.add('loader-done');
+      try { sessionStorage.setItem('tav-loaded', '1'); } catch {}
+      setTimeout(() => root.classList.remove('show-loader'), 1100);
+    };
+    const minTime = new Promise((r) => setTimeout(r, DURATION));
+    const loaded = new Promise((r) => (document.readyState === 'complete' ? r(null) : addEventListener('load', () => r(null), { once: true })));
+    // Never block longer than 6 s even on a slow connection
+    Promise.race([Promise.all([minTime, loaded]), new Promise((r) => setTimeout(r, 6000))]).then(finish);
+  }
+</script>

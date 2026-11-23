@@ -1,0 +1,175 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroFlyby from '../components/HeroFlyby.astro';
+import ServiceCard from '../components/ServiceCard.astro';
+import QuoteCta from '../components/QuoteCta.astro';
+import { services } from '../data/site';
+import { img, serviceImage } from '../data/images';
+
+const events = [
+  { title: 'Conferences & Meetings', spec: 'Corporate', image: img.conferences, alt: 'Packed conference hall facing a stage with three large screens' },
+  { title: 'Weddings & Parties', spec: 'Celebrations', image: img.weddings, alt: 'Wedding reception with draped walls, candles, flowers and a DJ booth' },
+  { title: 'Churches & Worship', spec: 'Faith', image: img.churches, alt: 'Church worship band on stage with line-array speakers and raised hands' },
+  { title: 'Live Events & Shows', spec: 'Entertainment', image: img.live, alt: 'Drum kit and microphones on a dark stage under violet light' },
+];
+
+const values = [
+  { spec: 'Reliable', title: 'On time, every time', text: 'Honest, friendly, skilled crew who set up early, test everything and stay until the last song.' },
+  { spec: 'Fair pricing', title: 'Right kit for your budget', text: 'We recommend exactly what your venue and guest count need: no over-selling, no surprises.' },
+  { spec: '10+ years', title: 'Experience you can hear', text: 'Led by director Mr T. Masango, with over a decade of sound and AV across KwaZulu-Natal.' },
+];
+---
+<BaseLayout
+  title="Sound Hire Durban | PA, AV, Stage & Lighting | Think Audio Visual"
+  description="Durban's reliable sound hire company. PA systems, line arrays, wireless mics, screens, stages and lighting for conferences, weddings, churches & live events. Get a free quote."
+  breadcrumbs={[{ name: 'Home', href: '/' }]}
+>
+  <HeroFlyby />
+
+  <!-- Ticker: sound gear marquee -->
+  <section class="border-y border-cable bg-case py-5" aria-label="Equipment we hire">
+    <div class="ticker">
+      <div class="ticker-track">
+        {[0, 1].map(() => (
+          <div class="flex items-center gap-10 pr-10" aria-hidden="true">
+            {['JBL line arrays', 'PA systems', 'Subwoofers', 'Wireless mics', 'Digital consoles', 'DJ setups', 'Projectors & screens', 'Stages & podiums', 'Moving heads', 'Uplighting'].map((t) => (
+              <span class="font-display text-3xl md:text-4xl text-ink whitespace-nowrap flex items-center gap-10">{t}<span class="w-2 h-2 bg-signal inline-block"></span></span>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust bar with count-up numbers -->
+  <section class="border-b border-cable">
+    <div class="container-stage grid grid-cols-2 md:grid-cols-4 divide-x divide-cable" data-stagger="120">
+      {[
+        { n: 10, suffix: '+', label: 'Years in sound' },
+        { n: 24, suffix: 'h', label: 'Quote turnaround' },
+        { n: 1, suffix: ' team', label: 'Setup to strike' },
+        { n: 4, suffix: '-in-1', label: 'Sound · AV · Stage · Light' },
+      ].map((s) => (
+        <div class="py-8 px-4 text-center reveal">
+          <p class="font-display text-5xl text-ink"><span data-count={s.n} data-suffix={s.suffix}>0{s.suffix}</span></p>
+          <p class="spec mt-1">{s.label}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Sound first: the core business -->
+  <section class="section overflow-hidden">
+    <div class="container-stage grid gap-12 lg:grid-cols-2 items-center">
+      <div data-stagger="90">
+        <p class="spec !text-signal-ink mb-4 flex items-center gap-3 reveal"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>01 / Sound hire</p>
+        <h2 class="h2">
+          <span class="line-mask"><span>Sound is what</span></span>
+          <span class="line-mask"><span>we do best</span></span>
+        </h2>
+        <p class="lead mt-6 reveal">From a single speaker and mic for a speech to full line-array systems for outdoor concerts, we bring professional JBL sound, set it up properly and run the desk so you don't have to think about it.</p>
+        <ul class="mt-8 grid sm:grid-cols-2 gap-x-8 border-t border-cable" data-stagger="60">
+          {services[0].items.map((i) => (
+            <li class="flex justify-between gap-4 py-3 border-b border-cable text-sm reveal-left"><span>{i}</span><span class="spec">Available</span></li>
+          ))}
+        </ul>
+        <a href="/services/sound-hire-durban/" class="btn btn-primary mt-8 reveal">Explore sound hire</a>
+      </div>
+      <div class="relative overflow-hidden border border-cable reveal-wipe">
+        <div data-parallax="0.08">
+          <Image src={img.soundKit} alt="Sound hire kit: PA speakers on stands, subwoofers, digital mixer and wireless microphones" widths={[640, 960, 1400]} sizes="(min-width:1024px) 50vw, 100vw" class="w-full h-auto" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container-stage"><div class="beam-line"></div></div>
+
+  <!-- All services -->
+  <section class="section">
+    <div class="container-stage">
+      <div class="flex flex-wrap items-end justify-between gap-6 mb-10">
+        <div>
+          <p class="spec mb-3 reveal">What we hire</p>
+          <h2 class="h2"><span class="line-mask"><span>Everything your event needs</span></span></h2>
+        </div>
+        <a href="/services/" class="link-arrow reveal">All services</a>
+      </div>
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4" data-stagger="120">
+        {services.map((s) => (
+          <ServiceCard href={`/services/${s.slug}/`} spec={s.spec} title={s.title} blurb={s.blurb} image={serviceImage[s.slug].src} alt={serviceImage[s.slug].alt} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Full-bleed parallax statement band -->
+  <section class="force-dark relative h-[80vh] overflow-hidden">
+    <div class="absolute inset-0" data-parallax="0.18">
+      <Image src={img.soundHero} alt="" widths={[1280, 1920, 2560]} sizes="100vw" class="h-full w-full object-cover" />
+    </div>
+    <div class="absolute inset-0 overlay-stage"></div>
+    <div class="hero-fade-top" style="background:linear-gradient(0deg,transparent,var(--page-bg))"></div>
+    <div class="hero-fade"></div>
+    <div class="container-stage relative h-full flex flex-col justify-center" data-stagger="140">
+      <p class="spec !text-signal-ink reveal">Indoor · Outdoor · Any size</p>
+      <p class="display-xl max-w-[16ch] mt-4">
+        <span class="line-mask"><span>From one mic</span></span>
+        <span class="line-mask"><span>to a full</span></span>
+        <span class="line-mask"><span>line array.</span></span>
+      </p>
+    </div>
+  </section>
+
+  <!-- Events -->
+  <section class="section">
+    <div class="container-stage">
+      <p class="spec mb-3 reveal">Events we power</p>
+      <h2 class="h2 mb-10"><span class="line-mask"><span>Built for every kind of occasion</span></span></h2>
+      <div class="grid gap-4 sm:grid-cols-2" data-stagger="120">
+        {events.map((e, i) => (
+          <a href="/contact/" class:list={['force-dark group relative block aspect-[16/9] overflow-hidden', i % 2 ? 'reveal-right' : 'reveal-left']}>
+            <Image src={e.image} alt={e.alt} widths={[640, 960, 1400]} sizes="(min-width:640px) 50vw, 100vw" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.06]" />
+            <div class="absolute inset-0 bg-gradient-to-t from-stage/90 via-stage/20 to-transparent"></div>
+            <div class="absolute bottom-0 p-6 transition-transform duration-500 group-hover:-translate-y-2">
+              <p class="spec !text-signal-ink">{e.spec}</p>
+              <h3 class="display !text-4xl mt-1">{e.title}</h3>
+              <span class="link-arrow text-sm inline-block mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Get a quote</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <div class="container-stage"><div class="beam-line"></div></div>
+
+  <!-- Why us -->
+  <section class="section overflow-hidden">
+    <div class="container-stage grid gap-12 lg:grid-cols-[1fr_1.2fr] items-center">
+      <div class="relative overflow-hidden border border-cable reveal-wipe">
+        <div data-parallax="0.1">
+          <Image src={img.soundFoh} alt="Sound engineer at a digital mixing console during a live event" widths={[640, 960, 1400]} sizes="(min-width:1024px) 45vw, 100vw" class="w-full h-auto" />
+        </div>
+      </div>
+      <div>
+        <p class="spec mb-3 reveal">Why Think AV</p>
+        <h2 class="h2"><span class="line-mask"><span>Reliable at all times</span></span></h2>
+        <div class="mt-8 divide-y divide-cable border-y border-cable" data-stagger="140">
+          {values.map((v) => (
+            <div class="py-6 reveal-right">
+              <p class="spec !text-signal-ink">{v.spec}</p>
+              <h3 class="h3 text-ink mt-1">{v.title}</h3>
+              <p class="text-haze mt-2">{v.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* TODO(owner): add 3 real client testimonials here (name, event type, permission). Do not invent quotes. */}
+
+  <QuoteCta />
+</BaseLayout>

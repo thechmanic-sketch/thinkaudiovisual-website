@@ -1,0 +1,22 @@
+# High-res masters (AI frames, 4K upscales, old versions, video sources) — kept on drive T only
+/assets/
+
+# Website build output, dependencies, caches (see also web/.gitignore)
+web/node_modules/
+web/dist/
+web/.astro/
+
+# Secrets — never commit (Web3Forms key etc.)
+.env
+.env.*
+!.env.example
+
+# Local tool settings
+.claude/settings.local.json
+web/.claude/settings.local.json
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log

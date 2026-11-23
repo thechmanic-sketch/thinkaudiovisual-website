@@ -1,0 +1,18 @@
+---
+import { Image } from 'astro:assets';
+import { img } from '../data/images';
+import { site, whatsappHref } from '../data/site';
+---
+<section class="force-dark relative overflow-hidden border-y border-cable bg-stage">
+  <Image src={img.ctaBg} alt="" widths={[1280, 2560]} sizes="100vw" class="absolute inset-0 h-full w-full object-cover" />
+  <div class="absolute inset-0 bg-stage/40"></div>
+  <div class="container-stage relative section text-center reveal">
+    <p class="spec !text-signal-ink mb-4">Planning an event?</p>
+    <h2 class="display max-w-[16ch] mx-auto">Get a quote within 24 hours</h2>
+    <p class="lead mx-auto mt-6">Tell us the date, venue and guest count. We'll recommend the right sound, AV and lighting for your budget.</p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a href="/contact/" class="btn btn-primary">Request a quote</a>
+      <a href={whatsappHref} target="_blank" rel="noopener" class="btn btn-secondary">WhatsApp {site.phone.display}</a>
+    </div>
+  </div>
+</section>

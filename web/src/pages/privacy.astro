@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site';
+// TODO(owner): have this reviewed. It is a plain-language starting point, not legal advice.
+---
+<BaseLayout title="Privacy Policy (POPIA) | Think Audio Visual" description="How Think Audio Visual collects and uses personal information under the Protection of Personal Information Act (POPIA)." breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Privacy', href: '/privacy/' }]}>
+  <section class="pt-32 pb-24">
+    <div class="container-stage max-w-3xl prose-stage">
+      <p class="spec !text-signal-ink mb-4">Privacy · POPIA</p>
+      <h1 class="display mb-10">Privacy policy</h1>
+      <h2 class="h3 text-ink mt-8 mb-3">What we collect</h2>
+      <p class="text-haze">When you request a quote we collect your name, phone number, email address and the event details you provide.</p>
+      <h2 class="h3 text-ink mt-8 mb-3">How we use it</h2>
+      <p class="text-haze">Only to respond to your enquiry, prepare a quote and deliver our services. We do not sell or share your information for marketing.</p>
+      <h2 class="h3 text-ink mt-8 mb-3">Third parties</h2>
+      <p class="text-haze">Form submissions are delivered to our email through a form-processing service. The contact page shows an embedded Google Map, which is subject to Google's privacy policy.</p>
+      <h2 class="h3 text-ink mt-8 mb-3">Your rights</h2>
+      <p class="text-haze">Under POPIA you may ask to see, correct or delete the personal information we hold about you. Contact the responsible party: {site.director}, <a class="link-arrow" href={`mailto:${site.email}`}>{site.email}</a></p>
+    </div>
+  </section>
+</BaseLayout>

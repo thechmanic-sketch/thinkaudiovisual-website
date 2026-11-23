@@ -1,0 +1,91 @@
+---
+// REAL event photos only. Drop files into src/assets/images/work/ named "<category>--<description>.jpg|png|webp",
+// e.g. "conference--durban-icc-three-screens.jpg". Category drives the filter and caption.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import QuoteCta from '../components/QuoteCta.astro';
+import PageHero from '../components/PageHero.astro';
+import { heroSlides } from '../data/images';
+
+const files = import.meta.glob<{ default: ImageMetadata }>('../assets/images/work/*.{jpg,jpeg,png,webp}', { eager: true });
+const photos = Object.entries(files)
+  .map(([path, mod]) => {
+    const base = path.split('/').pop()!.replace(/\.\w+$/, '');
+    const [category = 'event', desc = base] = base.split('--');
+    return { src: mod.default, category, caption: desc.replace(/-/g, ' ') };
+  })
+  .sort((a, b) => a.category.localeCompare(b.category));
+const categories = ['all', ...new Set(photos.map((p) => p.category))];
+---
+<BaseLayout
+  title="Our Work: Event Sound & AV Setups in Durban | Think Audio Visual"
+  description="Photos of our sound, AV, staging and lighting setups for conferences, weddings, churches and live events across Durban and KZN."
+  breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Our Work', href: '/our-work/' }]}
+>
+  <PageHero eyebrow="Our work · Real events" title="Setups we're proud of" lead="Every photo here is from a real Think AV event." slides={heroSlides.work} cta={false} />
+
+  <section class="pb-10">
+    <div class="container-stage">
+      <div class="flex flex-wrap gap-6 border-b border-cable" role="tablist">
+        {categories.map((c, i) => (
+          <button class:list={['filter-btn spec pb-3 border-b-2', i === 0 ? '!text-platinum border-signal' : 'border-transparent']} data-filter={c} role="tab">{c}</button>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="pb-24">
+    <div class="container-stage">
+      {photos.length === 0 ? (
+        <p class="text-haze">Gallery coming soon.</p>
+      ) : (
+        <div id="gallery" class="columns-1 sm:columns-2 lg:columns-3 gap-1">
+          {photos.map((p) => (
+            <figure class="break-inside-avoid mb-1 relative group overflow-hidden reveal-scale" data-cat={p.category}>
+              <a href={p.src.src} class="block" data-lightbox>
+                <Image src={p.src} alt={`${p.category} setup: ${p.caption}`} widths={[480, 800, 1200]} sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" class="w-full h-auto" />
+              </a>
+              <figcaption class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-stage/90 to-transparent spec !text-platinum opacity-0 group-hover:opacity-100 transition-opacity">{p.category} · {p.caption}</figcaption>
+            </figure>
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+
+  <dialog id="lightbox" class="bg-transparent backdrop:bg-stage/95 max-w-[95vw] max-h-[95vh] p-0">
+    <img id="lightbox-img" alt="" class="max-w-[95vw] max-h-[90vh] object-contain" />
+    <button class="absolute top-2 right-2 btn btn-secondary !p-3" onclick="this.closest('dialog').close()" aria-label="Close">✕</button>
+  </dialog>
+
+  <QuoteCta />
+</BaseLayout>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.filter-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const f = btn.dataset.filter;
+      document.querySelectorAll<HTMLButtonElement>('.filter-btn').forEach((b) => {
+        const on = b === btn;
+        b.classList.toggle('!text-platinum', on);
+        b.classList.toggle('border-signal', on);
+        b.classList.toggle('border-transparent', !on);
+      });
+      document.querySelectorAll<HTMLElement>('#gallery figure').forEach((fig) => {
+        fig.style.display = f === 'all' || fig.dataset.cat === f ? '' : 'none';
+      });
+    });
+  });
+  const dlg = document.getElementById('lightbox') as HTMLDialogElement;
+  const lbImg = document.getElementById('lightbox-img') as HTMLImageElement;
+  document.querySelectorAll<HTMLAnchorElement>('[data-lightbox]').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const img = a.querySelector('img')!;
+      lbImg.src = img.currentSrc || img.src; lbImg.alt = img.alt;
+      dlg.showModal();
+    });
+  });
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+</script>

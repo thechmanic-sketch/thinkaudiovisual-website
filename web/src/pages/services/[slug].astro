@@ -1,0 +1,68 @@
+---
+// Template for AV, Staging and Lighting pages. (Sound has its own richer page: sound-hire-durban.astro)
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import QuoteCta from '../../components/QuoteCta.astro';
+import { services } from '../../data/site';
+import { img, serviceImage, heroSlides } from '../../data/images';
+
+const meta: Record<string, { title: string; description: string; h1: string; lead: string; extra: typeof img.sound; extraAlt: string }> = {
+  'projector-screen-hire-durban': {
+    title: 'Projector & Screen Hire Durban | Think Audio Visual',
+    description: 'Data projectors, fastfold and daylight screens, laptops and video recording for conferences and events in Durban & KZN. Professional setup. Get a quote.',
+    h1: 'Projector & Screen Hire in Durban',
+    lead: 'Crisp, bright presentations for conferences, AGMs, launches and award evenings.',
+    extra: img.conferences, extraAlt: 'Conference hall with three large screens and a speaker at a lectern',
+  },
+  'stage-hire-durban': {
+    title: 'Stage & Podium Hire Durban | Think Audio Visual',
+    description: 'Performance, fashion-show and main-table stages plus podiums for events across Durban & KZN. Safe, professional setup. Request a quote.',
+    h1: 'Stage & Podium Hire in Durban',
+    lead: 'Solid, safe staging that lifts your speakers, performers and main table into the spotlight.',
+    extra: img.weddings, extraAlt: 'Wedding reception with a raised stage area and draped walls',
+  },
+  'event-lighting-hire-durban': {
+    title: 'Event Lighting & Uplighting Hire Durban | Think Audio Visual',
+    description: 'Stage lights, moving heads, uplighting, décor and disco lights to transform your venue in Durban & KZN. See our work and get a quote.',
+    h1: 'Event Lighting Hire in Durban',
+    lead: 'Moving heads, washes and uplighting that turn any hall into a venue.',
+    extra: img.live, extraAlt: 'Concert stage with violet and white lighting over a drum kit',
+  },
+};
+
+export function getStaticPaths() {
+  return services.filter((s) => s.slug !== 'sound-hire-durban').map((s) => ({ params: { slug: s.slug }, props: { service: s } }));
+}
+
+const { service } = Astro.props;
+const m = meta[service.slug];
+const hero = serviceImage[service.slug];
+---
+<BaseLayout
+  title={m.title}
+  description={m.description}
+  breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Services', href: '/services/' }, { name: service.title, href: `/services/${service.slug}/` }]}
+  schema={[{ '@context': 'https://schema.org', '@type': 'Service', serviceType: service.title, provider: { '@id': 'https://thinkaudiovisual.co.za/#business' }, areaServed: ['Durban', 'KwaZulu-Natal'] }]}
+>
+  <PageHero eyebrow={`${service.spec} · Durban`} title={m.h1} lead={m.lead} slides={heroSlides[service.slug] ?? [hero]} />
+
+  <section class="section">
+    <div class="container-stage grid gap-12 lg:grid-cols-2 items-start">
+      <div class="reveal">
+        <p class="spec mb-3">What's included</p>
+        <h2 class="h2">{service.title}</h2>
+        <p class="lead mt-6">{service.blurb}</p>
+        <ul class="mt-8 border-t border-cable">
+          {service.items.map((i) => (
+            <li class="flex justify-between gap-4 py-3 border-b border-cable"><span>{i}</span><span class="spec">For hire</span></li>
+          ))}
+        </ul>
+        <p class="mt-8 text-haze">Need sound as well? Most clients combine this with our <a class="link-arrow" href="/services/sound-hire-durban/">sound hire</a></p>
+      </div>
+      <Image src={m.extra} alt={m.extraAlt} widths={[640, 960, 1400]} sizes="(min-width:1024px) 50vw, 100vw" class="w-full h-auto border border-cable reveal" />
+    </div>
+  </section>
+
+  <QuoteCta />
+</BaseLayout>

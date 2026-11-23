@@ -1,0 +1,110 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import WhatsAppButton from '../components/WhatsAppButton.astro';
+import Loader from '../components/Loader.astro';
+import { site } from '../data/site';
+
+interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+  noindex?: boolean;
+  schema?: Record<string, unknown>[];
+  breadcrumbs?: { name: string; href: string }[];
+}
+
+const { title, description, ogImage = '/og-image.jpg', noindex = false, schema = [], breadcrumbs } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogUrl = new URL(ogImage, Astro.site).href;
+
+const localBusiness = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  '@id': `${site.url}/#business`,
+  name: site.name,
+  slogan: site.tagline,
+  url: site.url,
+  logo: `${site.url}/logo.png`,
+  image: ogUrl,
+  telephone: site.phone.tel,
+  email: site.email,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: site.address.street,
+    addressLocality: site.address.city,
+    addressRegion: site.address.region,
+    postalCode: site.address.postalCode,
+    addressCountry: site.address.country,
+  },
+  geo: { '@type': 'GeoCoordinates', latitude: site.geo.lat, longitude: site.geo.lng },
+  areaServed: ['Durban', 'KwaZulu-Natal'],
+  founder: { '@type': 'Person', name: site.director },
+  sameAs: site.social.filter((s) => s.href).map((s) => s.href),
+};
+
+const breadcrumbSchema = breadcrumbs && {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: breadcrumbs.map((b, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: b.name,
+    item: new URL(b.href, Astro.site).href,
+  })),
+};
+
+const allSchema = [localBusiness, ...(breadcrumbSchema ? [breadcrumbSchema] : []), ...schema];
+---
+
+<!doctype html>
+<html lang="en-ZA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content="#0B0C0E" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogUrl} />
+    <meta property="og:locale" content="en_ZA" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Apply saved theme + motion preference before first paint (no flash) -->
+    <script is:inline>
+      try {
+        var t = localStorage.getItem('tav-theme');
+        document.documentElement.dataset.theme = t === 'light' ? 'light' : 'dark';
+        if (localStorage.getItem('tav-motion') === 'off') document.documentElement.classList.add('motion-off');
+      } catch (e) { document.documentElement.dataset.theme = 'dark'; }
+      try { if (!sessionStorage.getItem('tav-loaded')) document.documentElement.classList.add('show-loader'); } catch (e) {}
+    </script>
+    {allSchema.map((s) => <script type="application/ld+json" set:html={JSON.stringify(s)} />)}
+    <slot name="head" />
+  </head>
+  <body class="min-h-screen">
+    <Loader />
+    <div id="scroll-progress" aria-hidden="true"></div>
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] btn btn-primary">Skip to content</a>
+    <Header />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    <WhatsAppButton />
+
+    <script>
+      import '../scripts/motion.ts';
+    </script>
+  </body>
+</html>

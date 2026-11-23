@@ -1,0 +1,109 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site, services, whatsappHref } from '../data/site';
+import PageHero from '../components/PageHero.astro';
+import { heroSlides } from '../data/images';
+
+// Form delivery: Web3Forms (free). Get an access key at web3forms.com using admin@thinkaudiovisual.co.za,
+// then put it in web/.env as PUBLIC_WEB3FORMS_KEY=xxxx
+const formKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
+const eventTypes = ['Conference / meeting', 'Wedding', 'Party / celebration', 'Church / worship', 'Live music / concert', 'Fashion show', 'Other'];
+const mapQuery = encodeURIComponent(`${site.address.street}, ${site.address.suburb}, ${site.address.city} ${site.address.postalCode}`);
+---
+<BaseLayout
+  title="Get a Quote | Sound Hire Durban | Think Audio Visual"
+  description={`Call ${site.phone.display}, WhatsApp us, or send your event details for a fast quote on sound, AV, staging and lighting hire. Based in Bonela, Durban.`}
+  breadcrumbs={[{ name: 'Home', href: '/' }, { name: 'Contact', href: '/contact/' }]}
+>
+  <PageHero eyebrow="Get a quote" title="Tell us about your event" lead="We'll reply within 24 hours with a recommendation and a quote." slides={heroSlides.contact} cta={false} />
+
+  <section class="pb-24">
+    <div class="container-stage grid gap-16 lg:grid-cols-[1.4fr_1fr]">
+      <div class="reveal">
+
+        <form id="quote-form" action="https://api.web3forms.com/submit" method="POST" class="grid gap-5 sm:grid-cols-2">
+          <input type="hidden" name="access_key" value={formKey} />
+          <input type="hidden" name="subject" value="New quote request: thinkaudiovisual.co.za" />
+          <input type="checkbox" name="botcheck" class="hidden" tabindex="-1" autocomplete="off" />
+
+          <label class="grid gap-2 text-sm font-medium">Name<input class="input" name="name" required autocomplete="name" /></label>
+          <label class="grid gap-2 text-sm font-medium">Phone / WhatsApp<input class="input" name="phone" type="tel" required autocomplete="tel" /></label>
+          <label class="grid gap-2 text-sm font-medium sm:col-span-2">Email<input class="input" name="email" type="email" required autocomplete="email" /></label>
+          <label class="grid gap-2 text-sm font-medium">Event type
+            <select class="input" name="event_type" required>
+              <option value="">Choose…</option>
+              {eventTypes.map((t) => <option>{t}</option>)}
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm font-medium">Event date<input class="input" name="event_date" type="date" required /></label>
+          <label class="grid gap-2 text-sm font-medium">Venue / area<input class="input" name="venue" placeholder="e.g. Umhlanga" /></label>
+          <label class="grid gap-2 text-sm font-medium">Guest count<input class="input" name="guests" type="number" min="1" /></label>
+
+          <fieldset class="sm:col-span-2">
+            <legend class="text-sm font-medium mb-3">Services needed</legend>
+            <div class="flex flex-wrap gap-3">
+              {services.map((s, i) => (
+                <label class="flex items-center gap-2 border border-cable px-4 py-2 text-sm cursor-pointer has-[:checked]:border-signal">
+                  <input type="checkbox" name="services" value={s.short} class="accent-signal" checked={i === 0} />{s.short}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <label class="grid gap-2 text-sm font-medium sm:col-span-2">Message<textarea class="input" name="message" placeholder="Anything else we should know?"></textarea></label>
+
+          <label class="flex gap-3 text-sm text-haze sm:col-span-2">
+            <input type="checkbox" required class="accent-signal mt-1" />
+            <span>I agree that Think Audio Visual may use these details to respond to my enquiry, as described in the <a class="link-arrow" href="/privacy/">privacy policy</a></span>
+          </label>
+
+          <button class="btn btn-primary sm:col-span-2 sm:justify-self-start" type="submit">Send quote request</button>
+          <p id="form-status" class="sm:col-span-2 text-sm" role="status"></p>
+        </form>
+      </div>
+
+      <aside class="space-y-8">
+        <div class="border border-cable bg-case p-8">
+          <p class="spec mb-4">Contact</p>
+          <address class="not-italic space-y-3">
+            <p class="font-medium text-ink">{site.name}</p>
+            <p>{site.address.street}<br />{site.address.suburb}, {site.address.city}, {site.address.postalCode}</p>
+            <p>Cell: <a class="hover:text-ink" href={`tel:${site.phone.tel}`}>{site.phone.display}</a></p>
+            <p>Tel: <a class="hover:text-ink" href={`tel:${site.landline.tel}`}>{site.landline.display}</a></p>
+            <p><a class="hover:text-ink" href={`mailto:${site.email}`}>{site.email}</a></p>
+            <p class="spec pt-2">{site.hours}</p>
+          </address>
+          <a href={whatsappHref} target="_blank" rel="noopener" class="btn btn-primary w-full mt-6">WhatsApp us</a>
+        </div>
+        <iframe
+          title="Map to Think Audio Visual, Bonela, Durban"
+          class="w-full aspect-square border border-cable map-embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          src={`https://www.google.com/maps?q=${mapQuery}&output=embed`}
+        ></iframe>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  const form = document.getElementById('quote-form') as HTMLFormElement;
+  const status = document.getElementById('form-status')!;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const key = (form.querySelector('[name=access_key]') as HTMLInputElement).value;
+    if (!key) { status.textContent = 'Form not connected yet. Please WhatsApp or call us.'; status.className = 'sm:col-span-2 text-sm text-error'; return; }
+    status.textContent = 'Sending…';
+    const data = new FormData(form);
+    data.set('services', data.getAll('services').join(', '));
+    try {
+      const res = await fetch(form.action, { method: 'POST', body: data, headers: { Accept: 'application/json' } });
+      const json = await res.json();
+      if (json.success) { form.reset(); status.textContent = "Thanks! We'll be in touch within 24 hours."; status.className = 'sm:col-span-2 text-sm text-signal-ink'; }
+      else throw new Error(json.message);
+    } catch {
+      status.textContent = 'Something went wrong. Please WhatsApp or call us.'; status.className = 'sm:col-span-2 text-sm text-error';
+    }
+  });
+</script>
