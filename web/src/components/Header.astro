@@ -1,7 +1,10 @@
 ---
 import { u } from '../utils/url';
 import Logo from './Logo.astro';
-import { nav, site } from '../data/site';
+import SocialIcons from './SocialIcons.astro';
+import { Image } from 'astro:assets';
+import { img } from '../data/images';
+import { nav, site, services, whatsappHref } from '../data/site';
 const path = Astro.url.pathname;
 // Highlight only the most specific matching nav item
 const active = nav.filter((n) => path.startsWith(u(n.href))).sort((a, b) => b.href.length - a.href.length)[0]?.href;
@@ -29,21 +32,53 @@ const active = nav.filter((n) => path.startsWith(u(n.href))).sort((a, b) => b.hr
         <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
       </button>
       <a href={u('/contact/')} class="btn btn-primary !py-2.5 !px-3 sm:!py-3 sm:!px-5 !text-[12px] sm:!text-[13px] whitespace-nowrap"><span class="sm:hidden">Quote</span><span class="hidden sm:inline">Get a Quote</span></a>
-      <button id="menu-btn" class="lg:hidden p-2 -mr-2" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+      <button id="menu-btn" class="lg:hidden relative w-10 h-10 -mr-2 grid place-items-center" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>
       </button>
     </div>
   </div>
-
-  <div id="mobile-menu" class="lg:hidden fixed inset-0 top-16 bg-stage hidden">
-    <nav class="container-stage flex flex-col gap-2 pt-8" aria-label="Mobile">
-      <a href={u('/')} class="display !text-5xl py-1">Home</a>
-      {nav.map((item) => <a href={u(item.href)} class="display !text-5xl py-1">{item.label}</a>)}
-      <a href={`tel:${site.phone.tel}`} class="spec mt-8 !text-platinum">{site.phone.display}</a>
-      <a href={`mailto:${site.email}`} class="spec !text-platinum">{site.email}</a>
-    </nav>
-  </div>
 </header>
+
+<!-- Mobile menu: sits OUTSIDE the header so the header's glass blur can't clip it -->
+<div id="mobile-menu" class="force-dark lg:hidden" aria-hidden="true" inert>
+  <div class="mm-bg" aria-hidden="true">
+    <Image src={img.lighting} alt="" widths={[768, 1280]} sizes="100vw" loading="lazy" />
+  </div>
+  <div class="mm-inner container-stage">
+    <nav aria-label="Mobile">
+      <ol class="mm-links">
+        <li style="--i:0"><a href={u('/')} class:list={[path === u('/') && 'is-active']}><span class="mm-num">00</span>Home</a></li>
+        {nav.map((item, i) => (
+          <li style={`--i:${i + 1}`}>
+            <a href={u(item.href)} class:list={[item.href === active && 'is-active']}><span class="mm-num">{String(i + 1).padStart(2, '0')}</span>{item.label}</a>
+            {item.href === '/services/' && (
+              <div class="mm-sub">
+                {services.map((s) => <a href={u(`/services/${s.slug}/`)}>{s.short}</a>)}
+              </div>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+
+    <div class="mm-actions" style={`--i:${nav.length + 1}`}>
+      <a href={`tel:${site.phone.tel}`} class="btn btn-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>
+        Call
+      </a>
+      <a href={whatsappHref} target="_blank" rel="noopener" class="btn btn-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.2-1.8-.9-2-1-.3-.1-.5-.2-.7.2l-.9 1.2c-.2.2-.4.2-.6.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.5-.5.3-.5c.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.2 5.1 4.5 2.5 1 3 .8 3.6.8.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.2-.3-.2-.6-.4zM12 21.5c-1.7 0-3.4-.5-4.8-1.3l-3.6.9 1-3.5A9.5 9.5 0 1 1 12 21.5z"/></svg>
+        WhatsApp
+      </a>
+      <a href={u('/contact/')} class="btn btn-primary col-span-2">Get a Quote</a>
+    </div>
+
+    <div class="mm-foot" style={`--i:${nav.length + 2}`}>
+      <SocialIcons />
+      <p class="spec mt-4">{site.phone.display} · {site.email}</p>
+    </div>
+  </div>
+</div>
 
 <style>
   #site-header[data-solid='true'] { background: color-mix(in srgb, var(--color-case) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--color-cable); }
@@ -52,6 +87,52 @@ const active = nav.filter((n) => path.startsWith(u(n.href))).sort((a, b) => b.hr
   /* Over the dark hero the transparent header must stay light-on-dark in both themes */
   #site-header[data-solid='false'] { --color-ink: #fff; --color-platinum: #ECEDF0; --color-signal-ink: #2EF906; --color-cable: rgba(255,255,255,.25); color: #ECEDF0; }
   :global(html[data-theme='light']) .icon-sun, :global(html[data-theme='dark']) .icon-moon { display: none; }
+
+  /* While the menu is open the header floats clear over the dark menu panel */
+  :global(html.menu-open) #site-header { background: transparent !important; backdrop-filter: none !important; border-color: transparent !important; transform: none !important;
+    --color-ink: #fff; --color-platinum: #ECEDF0; --color-cable: rgba(255,255,255,.25); color: #ECEDF0; }
+
+  /* Hamburger → X */
+  .burger { position: relative; width: 24px; height: 16px; display: block; }
+  .burger i { position: absolute; left: 0; width: 100%; height: 1.5px; background: currentColor; transition: transform .45s var(--ease-stage), opacity .25s, top .45s var(--ease-stage); }
+  .burger i:nth-child(1) { top: 0; } .burger i:nth-child(2) { top: 7px; } .burger i:nth-child(3) { top: 14px; }
+  #menu-btn[aria-expanded='true'] .burger i:nth-child(1) { top: 7px; transform: rotate(45deg); }
+  #menu-btn[aria-expanded='true'] .burger i:nth-child(2) { opacity: 0; transform: scaleX(.2); }
+  #menu-btn[aria-expanded='true'] .burger i:nth-child(3) { top: 7px; transform: rotate(-45deg); }
+
+  /* ── Mobile menu panel ── */
+  #mobile-menu { position: fixed; inset: 0; z-index: 45; background: #0B0C0E; overflow-y: auto; overscroll-behavior: contain;
+    clip-path: circle(0% at calc(100% - 36px) 32px); visibility: hidden;
+    transition: clip-path .7s cubic-bezier(.76,0,.24,1), visibility 0s linear .7s; }
+  #mobile-menu.is-open { clip-path: circle(150% at calc(100% - 36px) 32px); visibility: visible; transition: clip-path .7s cubic-bezier(.76,0,.24,1), visibility 0s; }
+
+  /* Background: blurred, darkened stage lights + soft green glow */
+  .mm-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .mm-bg :global(img) { width: 100%; height: 100%; object-fit: cover; filter: blur(14px) saturate(1.2) brightness(.55); transform: scale(1.15); }
+  .mm-bg::after { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(120% 60% at 50% 110%, rgba(45,196,16,.28), transparent 60%), linear-gradient(180deg, rgba(11,12,14,.75) 0%, rgba(11,12,14,.86) 55%, rgba(11,12,14,.95) 100%); }
+
+  .mm-inner { position: relative; min-height: 100%; display: flex; flex-direction: column; padding-top: 96px; padding-bottom: 32px; }
+
+  .mm-links { list-style: none; margin: 0; padding: 0; }
+  .mm-links li { border-bottom: 1px solid rgba(255,255,255,.1); }
+  .mm-links > li > a { display: flex; align-items: baseline; gap: 14px; padding: 14px 0; font-family: var(--font-display); font-size: 30px; line-height: 1; letter-spacing: .04em; text-transform: uppercase; color: #fff; }
+  .mm-links > li > a.is-active { color: var(--color-signal); }
+  .mm-num { font-family: var(--font-spec); font-size: 11px; letter-spacing: .1em; color: var(--color-signal); transform: translateY(-4px); min-width: 20px; }
+  .mm-links > li > a:active { color: var(--color-signal); }
+  .mm-sub { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 0 14px 34px; }
+  .mm-sub a { font-family: var(--font-spec); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #ECEDF0; border: 1px solid rgba(255,255,255,.2); padding: 6px 10px; }
+  .mm-sub a:active { border-color: var(--color-signal); color: var(--color-signal); }
+
+  .mm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 28px; }
+  .mm-actions .btn { padding: 14px 12px; font-size: 13px; }
+  .mm-foot { margin-top: auto; padding-top: 28px; }
+
+  /* Staggered entrance */
+  .mm-links li, .mm-actions, .mm-foot { opacity: 0; transform: translateY(18px); transition: opacity .5s var(--ease-stage), transform .6s var(--ease-stage); }
+  #mobile-menu.is-open .mm-links li, #mobile-menu.is-open .mm-actions, #mobile-menu.is-open .mm-foot { opacity: 1; transform: none; transition-delay: calc(.25s + var(--i, 0) * 55ms); }
+
+  :global(html.menu-open) body { overflow: hidden; }
 </style>
 
 <script>
@@ -83,12 +164,21 @@ const active = nav.filter((n) => path.startsWith(u(n.href))).sort((a, b) => b.hr
     syncTheme();
   });
 
+  // Mobile menu: open/close with the ✕ button, Esc, or tapping a link
   const btn = document.getElementById('menu-btn')!;
   const menu = document.getElementById('mobile-menu')!;
-  btn.addEventListener('click', () => {
-    const open = menu.classList.toggle('hidden') === false;
+  const setMenu = (open: boolean) => {
+    menu.classList.toggle('is-open', open);
+    document.documentElement.classList.toggle('menu-open', open);
     btn.setAttribute('aria-expanded', String(open));
-    document.body.style.overflow = open ? 'hidden' : '';
-    if (open) header.dataset.solid = 'true';
-  });
+    btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    menu.setAttribute('aria-hidden', String(!open));
+    menu.toggleAttribute('inert', !open);
+    if (open) (menu.querySelector('a') as HTMLElement | null)?.focus({ preventScroll: true });
+  };
+  btn.addEventListener('click', () => setMenu(!menu.classList.contains('is-open')));
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu.classList.contains('is-open')) { setMenu(false); btn.focus(); } });
+  menu.addEventListener('click', (e) => { if ((e.target as HTMLElement).closest('a')) setMenu(false); });
+  // Close if the screen grows to desktop size while open
+  matchMedia('(min-width: 1024px)').addEventListener('change', (m) => { if (m.matches) setMenu(false); });
 </script>
