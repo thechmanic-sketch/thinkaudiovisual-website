@@ -1,12 +1,26 @@
 ---
 import { u } from '../utils/url';
 // "Descent flyby" hero (see DESIGN.md §5).
-// Desktop: a 300vh sticky section scrubs the all-keyframe video by scroll position.
-// Phones / Save-Data / visitor switched motion off: seamless 8 s loop (crossfaded, no jump) + headline.
+// DESKTOP: a 300vh sticky section draws pre-loaded still frames on a <canvas> by scroll position
+//          (frame-exact, no video seeking, so it behaves the same on every load).
+// PHONES:  the flyby video plays once, holds the last frame for 20 s with a slow zoom + pan, then repeats.
+// Desktop with motion switched off: seamless crossfaded loop.
 import { whatsappHref } from '../data/site';
 ---
 <section id="flyby" class="force-dark relative" style="height:300vh" aria-label="Think Audio Visual introduction">
+  <!-- Decide desktop vs phone before first paint (same rule as the script below) -->
+  <script is:inline>
+    (function () {
+      var s = document.getElementById('flyby');
+      var fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+      var desktop = (fine && innerWidth >= 640) || innerWidth >= 1024;
+      s.classList.add(desktop ? 'is-desktop' : 'is-phone');
+    })();
+  </script>
+  <noscript><style>#flyby{height:100vh!important}#flyby .phase-final{opacity:1}#flyby .word,#scroll-hint{display:none}</style></noscript>
+
   <div class="sticky top-0 h-screen overflow-hidden">
+    <canvas id="flyby-canvas" class="absolute inset-0 h-full w-full" aria-hidden="true"></canvas>
     <video
       id="flyby-video"
       data-bg
@@ -14,13 +28,13 @@ import { whatsappHref } from '../data/site';
       muted
       playsinline
       preload="auto"
-      poster={u('/video/hero-flyby-loop-poster.jpg')}
+      poster={u('/flyby/f001.webp')}
     ></video>
     <div class="absolute inset-0 overlay-stage"></div>
     <div class="hero-fade-top"></div>
     <div class="hero-fade"></div>
 
-    <!-- Words synced to the video frames: each word sits on the thing it names -->
+    <!-- Words synced to the frames: each word sits on the thing it names -->
     <p data-phase="0" class="phase word word-sound display-xl" aria-hidden="true">Sound.</p>
     <p data-phase="1" class="phase word word-stage display-xl" aria-hidden="true">Stage.</p>
     <p data-phase="2" class="phase word word-light display-xl" aria-hidden="true">Light.</p>
@@ -46,8 +60,9 @@ import { whatsappHref } from '../data/site';
     <button id="flyby-pause" hidden aria-pressed="false" class="absolute bottom-24 left-4 md:left-8 z-10 spec !text-platinum border border-cable bg-stage/60 px-3 py-2 hover:border-platinum">Pause video</button>
 
     <div id="scroll-hint" class="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 spec !text-platinum flex flex-col items-center gap-2">
-      Scroll
+      <span id="flyby-status">Scroll</span>
       <span class="block w-px h-10 bg-platinum/60 animate-pulse"></span>
+      <span class="flyby-progress" aria-hidden="true"><i id="flyby-bar"></i></span>
     </div>
   </div>
 </section>
@@ -56,18 +71,24 @@ import { whatsappHref } from '../data/site';
   .phase { opacity: 0; transition: opacity .5s var(--ease-stage), transform .8s var(--ease-stage), filter .6s; pointer-events: none; }
   .phase.on { opacity: 1; pointer-events: auto; }
 
+  /* Media layers: canvas on desktop scroll mode, video everywhere else */
+  #flyby.is-desktop:not(.static) #flyby-video { display: none; }
+  #flyby.is-phone #flyby-canvas, #flyby.static #flyby-canvas { display: none; }
+  #flyby-video { transform-origin: 50% 42%; will-change: transform; }
+
+  /* Loading progress under the scroll hint (desktop, first visit) */
+  .flyby-progress { width: 80px; height: 2px; background: rgba(255,255,255,.18); overflow: hidden; opacity: 0; transition: opacity .4s; }
+  .flyby-progress i { display: block; height: 100%; width: 100%; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, #5B8CFF, #2EF906); transition: transform .2s linear; }
+  #flyby.is-loading .flyby-progress { opacity: 1; }
+
   /* Final headline block */
   .phase-final { position: absolute; inset-inline: 16px; top: 50%; transform: translateY(-46%); transition-duration: .25s; }
-  .phase-final.on { transition: opacity .7s var(--ease-stage) .25s, transform .9s var(--ease-stage) .25s; }
+  .phase-final.on { transition: opacity .7s var(--ease-stage) .25s, transform .9s var(--ease-stage) .25s; transform: translateY(-50%); }
   .word:not(.on) { transition-duration: .25s; }
-  @media (min-width: 768px) { .phase-final { inset-inline: 32px; } }
-  .phase-final.on { transform: translateY(-50%); }
-  /* Desktop: keep the headline in the left column so the logo on the stage screen stays visible */
-  @media (min-width: 768px) {
-    .phase-final { right: auto; max-width: min(36vw, 560px); }
-    .phase-final h1 { font-size: clamp(56px, 6.2vw, 96px); }
-    .phase-final .lead { font-size: 16px; }
-  }
+  /* Desktop: headline in the left column so the logo on the stage screen stays visible */
+  #flyby:not(.is-phone) .phase-final { inset-inline: 32px; right: auto; max-width: min(36vw, 560px); }
+  #flyby:not(.is-phone) .phase-final h1 { font-size: clamp(56px, 6.2vw, 96px); }
+  #flyby:not(.is-phone) .phase-final .lead { font-size: 16px; }
 
   /* Words, positioned on the matching part of the frame */
   .word { position: absolute; margin: 0; line-height: .85; white-space: nowrap; }
@@ -75,7 +96,7 @@ import { whatsappHref } from '../data/site';
   .word-sound { left: clamp(120px, 15vw, 260px); top: 22%; transform: translateX(-30px); }
   .word-sound.on { transform: none; }
   .word-sound::before { content: ''; position: absolute; left: -48px; top: 50%; width: 36px; height: 2px; background: var(--color-signal); }
-  /* STAGE: standing ON the stage floor — bottom edge sits on the floor line, tracked per frame (JS sets --floor-y and --stage-s) */
+  /* STAGE: standing ON the stage floor — bottom edge on the floor line, tracked per frame (JS sets --floor-y, --stage-s) */
   .word-stage { left: 50%; top: var(--floor-y, 60%); transform-origin: 50% 100%; transform: translate(-50%, -100%) scale(var(--stage-s, .7)); transition: opacity .5s var(--ease-stage), filter .6s; text-shadow: 0 18px 30px rgba(0,0,0,.55); }
   .word-stage::after { content: ''; position: absolute; left: 4%; right: 4%; bottom: -2px; height: 2px; background: linear-gradient(90deg, transparent, rgba(91,140,255,.9), rgba(46,249,6,.9), transparent); }
   /* LIGHT: bursts in with the beams, glowing */
@@ -84,108 +105,62 @@ import { whatsappHref } from '../data/site';
   .phase.on .line-mask > span { transform: none; }
   .phase .line-mask:nth-child(2) > span { transition-delay: .1s; }
   .phase .line-mask:nth-child(3) > span { transition-delay: .2s; }
-  #flyby.static { height: 100vh !important; }
-  #flyby.static .word { display: none; }
-  /* Phones: same result from CSS alone, before any JavaScript runs */
-  @media (max-width: 767px) {
-    #flyby { height: 100svh !important; }
-    #flyby .word, #flyby #scroll-hint { display: none; }
-    #flyby .phase-final { opacity: 1; pointer-events: auto; }
-    #flyby .phase-final .line-mask > span { transform: none; }
-    /* Sit below the logo on the stage screen (logo is ~45% down the frame) */
-    #flyby .container-stage { position: static; }
-    #flyby .phase-final { position: absolute; top: auto !important; bottom: 28px; transform: none !important; }
-    #flyby .phase-final h1 { font-size: clamp(40px, 11.5vw, 48px); }
-    #flyby .phase-final .lead { font-size: 15px; margin-top: 12px; }
-    #flyby .phase-final [data-hero-cta] { margin-top: 18px; }
-    #flyby .phase-final .btn { padding: 14px 18px; font-size: 13px; }
-    #flyby-pause { top: 76px; bottom: auto !important; left: auto !important; right: 16px; }
-  }
-  /* Phones/static: headline must show even before/without JS timing */
-  #flyby.static .phase-final { opacity: 1; pointer-events: auto; }
-  #flyby.static .phase-final .line-mask > span { transform: none; }
-  #flyby.static #scroll-hint { display: none; }
+
+  /* Static modes (phone, or desktop with motion off): single screen, headline always visible */
+  #flyby.static, #flyby.is-phone { height: 100vh !important; height: 100svh !important; }
+  #flyby.static .word, #flyby.is-phone .word, #flyby.static #scroll-hint, #flyby.is-phone #scroll-hint { display: none; }
+  #flyby.static .phase-final, #flyby.is-phone .phase-final { opacity: 1; pointer-events: auto; }
+  #flyby.static .phase-final .line-mask > span, #flyby.is-phone .phase-final .line-mask > span { transform: none; }
+
+  /* Phone layout: headline below the logo on the stage screen (logo is ~45% down the frame) */
+  #flyby.is-phone .container-stage { position: static; }
+  #flyby.is-phone .phase-final { position: absolute; top: auto !important; bottom: 28px; transform: none !important; }
+  #flyby.is-phone .phase-final h1 { font-size: clamp(40px, 11.5vw, 48px); }
+  #flyby.is-phone .phase-final .lead { font-size: 15px; margin-top: 12px; }
+  #flyby.is-phone .phase-final [data-hero-cta] { margin-top: 18px; }
+  #flyby.is-phone .phase-final .btn { padding: 14px 18px; font-size: 13px; }
+  #flyby.is-phone #flyby-pause { top: 76px; bottom: auto !important; left: auto !important; right: 16px; }
 </style>
 
 <script>
   const section = document.getElementById('flyby')!;
-  const V = import.meta.env.BASE_URL.replace(/\/$/, '') + '/video'; // works on the real domain and the GitHub Pages sub-path
+  const BASE = import.meta.env.BASE_URL.replace(/\/$/, ''); // real domain and GitHub Pages sub-path
+  const V = BASE + '/video';
   const video = document.getElementById('flyby-video') as HTMLVideoElement;
+  const canvas = document.getElementById('flyby-canvas') as HTMLCanvasElement;
   const phases = [...section.querySelectorAll<HTMLElement>('.phase')];
   const hint = document.getElementById('scroll-hint')!;
 
   const motionOff = document.documentElement.classList.contains('motion-off');
-  const small = window.matchMedia('(max-width: 767px)').matches;
   const saveData = (navigator as any).connection?.saveData === true;
+  const isDesktop = () => (matchMedia('(hover: hover) and (pointer: fine)').matches && innerWidth >= 640) || innerWidth >= 1024;
+  const desktop = section.classList.contains('is-desktop');
 
-  if (small || saveData || motionOff) {
-    // Simple mode: seamless loop (last frame crossfades into the first, so there is no jump).
-    section.classList.add('static');
-    phases.forEach((p) => p.classList.toggle('on', p.dataset.phase === '3'));
-    if (!saveData) {
-      const btn = document.getElementById('flyby-pause')!;
-      btn.hidden = false;
-      let holding = false;          // true while the last frame is being held
-      let stopped = motionOff;      // true when the visitor pressed Pause
-      let holdTimer = 0;
+  // Reloads always start at the top so the flyby begins on its first frame
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  if (!location.hash) scrollTo(0, 0);
 
-      if (small) {
-        // Phones: play the full flyby once, hold the final frame (lit stage + logo) for 20 s, then replay.
-        const HOLD_MS = 20000;
-        video.innerHTML = `<source src="${V}/hero-flyby-mobile.webm" type="video/webm"><source src="${V}/hero-flyby-mobile.mp4" type="video/mp4">`;
-        video.poster = `${V}/hero-flyby-mobile-poster.jpg`;
-        video.loop = false;
-        video.addEventListener('ended', () => {
-          holding = true;
-          sync();
-          clearTimeout(holdTimer);
-          holdTimer = window.setTimeout(() => {
-            holding = false;
-            if (stopped) return;
-            video.currentTime = 0;
-            video.play().catch(() => {});
-          }, HOLD_MS);
-        });
-      } else {
-        // Desktop with motion off: seamless crossfaded loop (starts paused)
-        video.innerHTML = `<source src="${V}/hero-flyby-loop.webm" type="video/webm"><source src="${V}/hero-flyby-loop.mp4" type="video/mp4">`;
-        video.loop = true;
-      }
-      video.load();
-      if (!stopped) { video.autoplay = true; video.play().catch(() => {}); }
+  // If the window is resized across the desktop/phone line, reload into the right mode
+  let resizeTimer = 0;
+  addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(() => { if (isDesktop() !== desktop) location.reload(); }, 400);
+  });
 
-      // The button reflects the visitor's choice (holding on the last frame still counts as "playing")
-      function sync() {
-        const off = stopped || (video.paused && !holding);
-        btn.textContent = off ? 'Play video' : 'Pause video';
-        btn.setAttribute('aria-pressed', String(off));
-      }
-      sync(); video.addEventListener('play', sync); video.addEventListener('pause', sync);
-      btn.addEventListener('click', () => {
-        if (stopped || (video.paused && !holding)) {
-          stopped = false;
-          if (holding || video.ended) { clearTimeout(holdTimer); holding = false; video.currentTime = 0; }
-          video.play().catch(() => {});
-        } else {
-          stopped = true;
-          clearTimeout(holdTimer);
-          video.pause();
-        }
-        sync();
-      });
-    }
-  } else {
-    video.innerHTML = `<source src="${V}/hero-flyby-scrub.mp4" type="video/mp4">`;
-    video.load();
-    // Timings measured from the video (seconds): speakers 0–2, run to stage 2–7.3,
-    // beams fire at ~7.4 (brightness jump), headline from 8.8.
-    // v2 video (measured): speaker 0–1.8 s, over the sound desk to 3.5 s (still "Sound"),
-    // glide to the stage 3.55–5.1 s, first beams fire at ~5.1 s, hold on logo + crowd from ~7.5 s.
+  const showFinal = () => phases.forEach((p) => p.classList.toggle('on', p.dataset.phase === '3'));
+
+  if (desktop && !motionOff && !saveData) {
+    /* ───────────── DESKTOP: canvas frame flyby ───────────── */
+    const FPS = 12, COUNT = 121, DUR = (COUNT - 1) / FPS;      // frames f001..f121 = 0 s .. 10 s
+    const frames: (HTMLImageElement | null)[] = new Array(COUNT).fill(null);
+    const ctx = canvas.getContext('2d')!;
+    const status = document.getElementById('flyby-status')!;
+    const bar = document.getElementById('flyby-bar')!;
+
+    // Timings measured from the video (seconds)
     const T = { stage: 3.55, light: 5.1, final: 7.5 };
     const stageWord = section.querySelector<HTMLElement>('.word-stage')!;
-    // Stage-floor line measured from the video: [seconds, y% of frame height]  (filled from frame analysis)
     const FLOOR: [number, number][] = [[3.25, 16], [3.65, 22], [4.05, 29], [4.45, 36], [4.84, 43], [5.1, 47]];
-    // Word size grows as the camera approaches: [seconds, scale]
     const SCALE: [number, number][] = [[3.55, 0.55], [5.1, 1.0]];
     const lerpTable = (tbl: [number, number][], x: number) => {
       if (x <= tbl[0][0]) return tbl[0][1];
@@ -195,37 +170,154 @@ import { whatsappHref } from '../data/site';
       }
       return tbl[tbl.length - 1][1];
     };
-    let target = 0, current = 0, ticking = false;
 
+    // Size the canvas to the screen (sharp on high-DPI)
+    const fit = () => {
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      canvas.width = Math.round(canvas.clientWidth * dpr);
+      canvas.height = Math.round(canvas.clientHeight * dpr);
+      drawn = -1; requestRender();
+    };
+
+    // Draw a frame "object-fit: cover"; if it isn't loaded yet, use the nearest loaded one
+    let drawn = -1;
+    const draw = (idx: number) => {
+      let img = frames[idx];
+      if (!img) for (let d = 1; d < COUNT && !img; d++) img = frames[idx - d] || frames[idx + d] || null;
+      if (!img) return;
+      const key = frames.indexOf(img);
+      if (key === drawn) return;
+      drawn = key;
+      const cw = canvas.width, ch = canvas.height, s = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
+      const w = img.naturalWidth * s, h = img.naturalHeight * s;
+      ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
+    };
+
+    // Load all frames, coarse-to-fine (every 16th, then 8th, 4th…), so any scroll position
+    // shows a close frame immediately and the sequence sharpens as the rest arrive.
+    const order: number[] = [];
+    for (let step = 16; step >= 1; step = step >> 1) for (let i = 0; i < COUNT; i += step) if (!order.includes(i)) order.push(i);
+    let loaded = 0;
+    section.classList.add('is-loading');
+    status.textContent = 'Loading';
+    const loadOne = (i: number) => new Promise<void>((done) => {
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = `${BASE}/flyby/f${String(i + 1).padStart(3, '0')}.webp`;
+      const finish = () => { loaded++; bar.style.transform = `scaleX(${loaded / COUNT})`; done(); };
+      // Use the frame as soon as it has loaded; decode() is only a hint (it can stall in background tabs)
+      img.onload = () => { img.decode?.().catch(() => {}); frames[i] = img; drawn = -1; requestRender(); finish(); };
+      img.onerror = finish;
+    });
+    (async () => {
+      const queue = order.slice();
+      const workers = Array.from({ length: 6 }, async () => { while (queue.length) await loadOne(queue.shift()!); });
+      await Promise.all(workers);
+      section.classList.remove('is-loading');
+      status.textContent = 'Scroll';
+    })();
+
+    // Scroll → eased target → frame
+    let target = 0, current = 0, ticking = false, last = 0;
     const progress = () => {
       const r = section.getBoundingClientRect();
-      const total = section.offsetHeight - window.innerHeight;
+      const total = section.offsetHeight - innerHeight;
       return Math.min(1, Math.max(0, -r.top / total));
     };
-
-    const render = () => {
-      current += (target - current) * 0.16; // ease toward the scroll target for smooth scrubbing
-      const dur = video.duration || 10.04;
-      const t = current * (dur - 0.05);
-      if (video.duration) video.currentTime = t;
-      // Phase follows the frame actually shown, so words never drift from the picture
+    const render = (now: number) => {
+      // Time-based easing (~120 ms to settle): identical feel at 30, 60 or 144 fps, and it
+      // always catches up even if the computer drops frames.
+      const dt = last ? Math.min(now - last, 250) : 16;
+      last = now;
+      current += (target - current) * (1 - Math.exp(-dt / 120));
+      if (Math.abs(target - current) < 0.0005) current = target;
+      const t = current * DUR;
+      draw(Math.round(t * FPS));
+      // Words follow the frame actually drawn
       const active = t < T.stage ? 0 : t < T.light ? 1 : t < T.final ? 2 : 3;
       phases.forEach((el) => el.classList.toggle('on', Number(el.dataset.phase) === active));
-      // Track the stage floor line in the frame (y as % of video height), corrected for object-fit: cover cropping
       const fy = lerpTable(FLOOR, t);
-      const vw = innerWidth, vh = innerHeight, ar = 16 / 9;
-      const scaleH = Math.max(vh, vw / ar);                 // rendered video height
-      const yPx = (vh - scaleH) / 2 + (fy / 100) * scaleH;   // floor line in viewport px
-      stageWord.style.setProperty('--floor-y', `${yPx}px`);
+      const vw = innerWidth, vh = innerHeight;
+      const scaleH = Math.max(vh, vw / (16 / 9));
+      stageWord.style.setProperty('--floor-y', `${(vh - scaleH) / 2 + (fy / 100) * scaleH}px`);
       stageWord.style.setProperty('--stage-s', String(lerpTable(SCALE, t)));
       hint.style.opacity = target > 0.04 ? '0' : '1';
-      if (Math.abs(target - current) > 0.0005) requestAnimationFrame(render); else ticking = false;
+      if (current !== target) requestAnimationFrame(render); else { ticking = false; last = 0; }
     };
+    function requestRender() { target = progress(); if (!ticking) { ticking = true; requestAnimationFrame(render); } }
+    addEventListener('scroll', requestRender, { passive: true });
+    addEventListener('resize', fit);
+    // If the page was opened in a background tab, start fresh when it becomes visible
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { ticking = false; last = 0; drawn = -1; requestRender(); } });
+    fit();
+  } else {
+    /* ───────────── PHONE (and desktop with motion off / Save-Data) ───────────── */
+    section.classList.add('static');
+    showFinal();
+    if (!saveData) {
+      const btn = document.getElementById('flyby-pause')!;
+      btn.hidden = false;
+      let holding = false;       // last frame is being held
+      let stopped = motionOff;   // visitor pressed Pause (or motion is off)
+      let holdTimer = 0, backTimer = 0;
+      const HOLD_MS = 20000, EASE_BACK_MS = 1400;
 
-    const onScroll = () => { target = progress(); if (!ticking) { ticking = true; requestAnimationFrame(render); } };
-    video.addEventListener('loadedmetadata', onScroll);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    onScroll();
+      const zoomTo = (transform: string, ms: number, easing: string) => {
+        video.style.transition = `transform ${ms}ms ${easing}`;
+        void video.offsetWidth; // commit the transition before changing transform (no rAF needed)
+        video.style.transform = transform;
+      };
+      const resetZoom = () => { video.style.transition = 'none'; video.style.transform = ''; };
+
+      if (!desktop) {
+        // Phones: play once → hold last frame 20 s with a slow zoom + pan → ease back → replay
+        video.innerHTML = `<source src="${V}/hero-flyby-mobile.webm" type="video/webm"><source src="${V}/hero-flyby-mobile.mp4" type="video/mp4">`;
+        video.poster = `${V}/hero-flyby-mobile-poster.jpg`;
+        video.loop = false;
+        video.addEventListener('ended', () => {
+          holding = true; sync();
+          clearTimeout(holdTimer); clearTimeout(backTimer);
+          // slow push-in toward the logo screen, drifting gently up and across
+          zoomTo('scale(1.16) translate(-2%, -2.5%)', HOLD_MS - EASE_BACK_MS, 'cubic-bezier(.45,0,.55,1)');
+          backTimer = window.setTimeout(() => zoomTo('scale(1) translate(0, 0)', EASE_BACK_MS, 'cubic-bezier(.65,0,.35,1)'), HOLD_MS - EASE_BACK_MS);
+          holdTimer = window.setTimeout(() => {
+            holding = false;
+            if (stopped) return;
+            resetZoom();
+            video.currentTime = 0;
+            video.play().catch(() => {});
+          }, HOLD_MS);
+        });
+      } else {
+        // Desktop with motion off: seamless crossfaded loop (starts paused)
+        video.innerHTML = `<source src="${V}/hero-flyby-loop.webm" type="video/webm"><source src="${V}/hero-flyby-loop.mp4" type="video/mp4">`;
+        video.poster = `${V}/hero-flyby-loop-poster.jpg`;
+        video.loop = true;
+      }
+      video.load();
+      if (!stopped) { video.autoplay = true; video.play().catch(() => {}); }
+
+      function sync() {
+        const off = stopped || (video.paused && !holding);
+        btn.textContent = off ? 'Play video' : 'Pause video';
+        btn.setAttribute('aria-pressed', String(off));
+      }
+      sync(); video.addEventListener('play', sync); video.addEventListener('pause', sync);
+      btn.addEventListener('click', () => {
+        if (stopped || (video.paused && !holding)) {
+          stopped = false;
+          if (holding || video.ended) { clearTimeout(holdTimer); clearTimeout(backTimer); holding = false; resetZoom(); video.currentTime = 0; }
+          video.play().catch(() => {});
+        } else {
+          stopped = true;
+          clearTimeout(holdTimer); clearTimeout(backTimer);
+          // freeze the zoom where it is
+          const now = getComputedStyle(video).transform;
+          video.style.transition = 'none'; video.style.transform = now === 'none' ? '' : now;
+          video.pause();
+        }
+        sync();
+      });
+    }
   }
 </script>
