@@ -1,4 +1,5 @@
 ---
+import { u } from '../utils/url';
 import Logo from './Logo.astro';
 import SocialIcons from './SocialIcons.astro';
 import { site, services } from '../data/site';
@@ -7,7 +8,7 @@ const year = new Date().getFullYear();
 <footer class="bg-case border-t border-cable mt-0">
   <div class="container-stage py-16 grid gap-12 md:grid-cols-2 lg:grid-cols-4">
     <div>
-      <a href="/" aria-label="Think Audio Visual home" class="inline-block"><Logo class="h-16" /></a>
+      <a href={u('/')} aria-label="Think Audio Visual home" class="inline-block"><Logo class="h-16" /></a>
       <p class="mt-5 text-haze text-sm max-w-xs">Sound, AV, staging and lighting hire for conferences, weddings, churches and live events across KwaZulu-Natal.</p>
       <p class="spec mt-5">Reliable at all times</p>
       <div class="mt-6"><SocialIcons /></div>
@@ -15,8 +16,8 @@ const year = new Date().getFullYear();
     <div>
       <p class="spec mb-4">Services</p>
       <ul class="space-y-2 text-sm">
-        {services.map((s) => <li><a class="hover:text-ink" href={`/services/${s.slug}/`}>{s.title}</a></li>)}
-        <li><a class="hover:text-ink" href="/our-work/">Our Work</a></li>
+        {services.map((s) => <li><a class="hover:text-ink" href={u(`/services/${s.slug}/`)}>{s.title}</a></li>)}
+        <li><a class="hover:text-ink" href={u('/our-work/')}>Our Work</a></li>
       </ul>
     </div>
     <div>
@@ -35,7 +36,7 @@ const year = new Date().getFullYear();
   <div class="border-t border-cable">
     <div class="container-stage py-6 flex flex-col md:flex-row gap-3 justify-between text-xs text-haze">
       <p>© {year} {site.name}. All rights reserved.</p>
-      <p class="flex flex-wrap items-center gap-6"><button id="motion-toggle" class="spec !text-[11px] border border-cable px-2 py-1 hover:border-platinum">Motion: on</button><a href="/privacy/" class="hover:text-ink">Privacy (POPIA)</a><span class="spec !text-[11px]">Built in Durban</span></p>
+      <p class="flex flex-wrap items-center gap-6"><button id="motion-toggle" class="spec !text-[11px] border border-cable px-2 py-1 hover:border-platinum">Motion: on</button><a href={u('/privacy/')} class="hover:text-ink">Privacy (POPIA)</a><span class="spec !text-[11px]">Built in Durban</span></p>
     </div>
   </div>
 </footer>

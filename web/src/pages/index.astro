@@ -1,4 +1,5 @@
 ---
+import { u } from '../utils/url';
 import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroFlyby from '../components/HeroFlyby.astro';
@@ -74,7 +75,7 @@ const values = [
             <li class="flex justify-between gap-4 py-3 border-b border-cable text-sm reveal-left"><span>{i}</span><span class="spec">Available</span></li>
           ))}
         </ul>
-        <a href="/services/sound-hire-durban/" class="btn btn-primary mt-8 reveal">Explore sound hire</a>
+        <a href={u('/services/sound-hire-durban/')} class="btn btn-primary mt-8 reveal">Explore sound hire</a>
       </div>
       <div class="relative overflow-hidden border border-cable reveal-wipe">
         <div data-parallax="0.08">
@@ -94,11 +95,11 @@ const values = [
           <p class="spec mb-3 reveal">What we hire</p>
           <h2 class="h2"><span class="line-mask"><span>Everything your event needs</span></span></h2>
         </div>
-        <a href="/services/" class="link-arrow reveal">All services</a>
+        <a href={u('/services/')} class="link-arrow reveal">All services</a>
       </div>
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4" data-stagger="120">
         {services.map((s) => (
-          <ServiceCard href={`/services/${s.slug}/`} spec={s.spec} title={s.title} blurb={s.blurb} image={serviceImage[s.slug].src} alt={serviceImage[s.slug].alt} />
+          <ServiceCard href={u(`/services/${s.slug}/`)} spec={s.spec} title={s.title} blurb={s.blurb} image={serviceImage[s.slug].src} alt={serviceImage[s.slug].alt} />
         ))}
       </div>
     </div>
@@ -129,7 +130,7 @@ const values = [
       <h2 class="h2 mb-10"><span class="line-mask"><span>Built for every kind of occasion</span></span></h2>
       <div class="grid gap-4 sm:grid-cols-2" data-stagger="120">
         {events.map((e, i) => (
-          <a href="/contact/" class:list={['force-dark group relative block aspect-[16/9] overflow-hidden', i % 2 ? 'reveal-right' : 'reveal-left']}>
+          <a href={u('/contact/')} class:list={['force-dark group relative block aspect-[16/9] overflow-hidden', i % 2 ? 'reveal-right' : 'reveal-left']}>
             <Image src={e.image} alt={e.alt} widths={[640, 960, 1400]} sizes="(min-width:640px) 50vw, 100vw" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.06]" />
             <div class="absolute inset-0 bg-gradient-to-t from-stage/90 via-stage/20 to-transparent"></div>
             <div class="absolute bottom-0 p-6 transition-transform duration-500 group-hover:-translate-y-2">

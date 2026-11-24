@@ -1,4 +1,5 @@
 ---
+import { u } from '../utils/url';
 // "Descent flyby" hero (see DESIGN.md §5).
 // Desktop: a 300vh sticky section scrubs the all-keyframe video by scroll position.
 // Phones / Save-Data / visitor switched motion off: seamless 8 s loop (crossfaded, no jump) + headline.
@@ -13,7 +14,7 @@ import { whatsappHref } from '../data/site';
       muted
       playsinline
       preload="auto"
-      poster="/video/hero-flyby-loop-poster.jpg"
+      poster={u('/video/hero-flyby-loop-poster.jpg')}
     ></video>
     <div class="absolute inset-0 overlay-stage"></div>
     <div class="hero-fade-top"></div>
@@ -35,7 +36,7 @@ import { whatsappHref } from '../data/site';
           </h1>
           <p class="lead mt-6">PA systems, line arrays, screens, stages and lighting for conferences, weddings, churches and live events. Reliable at all times.</p>
           <div class="mt-8 flex flex-wrap gap-3" data-hero-cta>
-            <a href="/contact/" class="btn btn-primary">Get a Quote</a>
+            <a href={u('/contact/')} class="btn btn-primary">Get a Quote</a>
             <a href={whatsappHref} target="_blank" rel="noopener" class="btn btn-secondary">WhatsApp us</a>
           </div>
         </div>
@@ -108,6 +109,7 @@ import { whatsappHref } from '../data/site';
 
 <script>
   const section = document.getElementById('flyby')!;
+  const V = import.meta.env.BASE_URL.replace(/\/$/, '') + '/video'; // works on the real domain and the GitHub Pages sub-path
   const video = document.getElementById('flyby-video') as HTMLVideoElement;
   const phases = [...section.querySelectorAll<HTMLElement>('.phase')];
   const hint = document.getElementById('scroll-hint')!;
@@ -121,7 +123,7 @@ import { whatsappHref } from '../data/site';
     section.classList.add('static');
     phases.forEach((p) => p.classList.toggle('on', p.dataset.phase === '3'));
     if (!saveData) {
-      video.innerHTML = '<source src="/video/hero-flyby-loop.webm" type="video/webm"><source src="/video/hero-flyby-loop.mp4" type="video/mp4">';
+      video.innerHTML = `<source src="${V}/hero-flyby-loop.webm" type="video/webm"><source src="${V}/hero-flyby-loop.mp4" type="video/mp4">`;
       video.loop = true;
       video.load();
       if (!motionOff) { video.autoplay = true; video.play().catch(() => {}); }
@@ -132,7 +134,7 @@ import { whatsappHref } from '../data/site';
       btn.addEventListener('click', () => (video.paused ? video.play() : video.pause()));
     }
   } else {
-    video.innerHTML = '<source src="/video/hero-flyby-scrub.mp4" type="video/mp4">';
+    video.innerHTML = `<source src="${V}/hero-flyby-scrub.mp4" type="video/mp4">`;
     video.load();
     // Timings measured from the video (seconds): speakers 0–2, run to stage 2–7.3,
     // beams fire at ~7.4 (brightness jump), headline from 8.8.

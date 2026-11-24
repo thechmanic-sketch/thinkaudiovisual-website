@@ -1,4 +1,5 @@
 ---
+import { u } from '../../utils/url';
 // Template for AV, Staging and Lighting pages. (Sound has its own richer page: sound-hire-durban.astro)
 import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
@@ -58,7 +59,7 @@ const hero = serviceImage[service.slug];
             <li class="flex justify-between gap-4 py-3 border-b border-cable"><span>{i}</span><span class="spec">For hire</span></li>
           ))}
         </ul>
-        <p class="mt-8 text-haze">Need sound as well? Most clients combine this with our <a class="link-arrow" href="/services/sound-hire-durban/">sound hire</a></p>
+        <p class="mt-8 text-haze">Need sound as well? Most clients combine this with our <a class="link-arrow" href={u('/services/sound-hire-durban/')}>sound hire</a></p>
       </div>
       <Image src={m.extra} alt={m.extraAlt} widths={[640, 960, 1400]} sizes="(min-width:1024px) 50vw, 100vw" class="w-full h-auto border border-cable reveal" />
     </div>

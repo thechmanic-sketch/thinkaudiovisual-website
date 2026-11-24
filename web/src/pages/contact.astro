@@ -1,4 +1,5 @@
 ---
+import { u } from '../utils/url';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site, services, whatsappHref } from '../data/site';
 import PageHero from '../components/PageHero.astro';
@@ -54,7 +55,7 @@ const mapQuery = encodeURIComponent(`${site.address.street}, ${site.address.subu
 
           <label class="flex gap-3 text-sm text-haze sm:col-span-2">
             <input type="checkbox" required class="accent-signal mt-1" />
-            <span>I agree that Think Audio Visual may use these details to respond to my enquiry, as described in the <a class="link-arrow" href="/privacy/">privacy policy</a></span>
+            <span>I agree that Think Audio Visual may use these details to respond to my enquiry, as described in the <a class="link-arrow" href={u('/privacy/')}>privacy policy</a></span>
           </label>
 
           <button class="btn btn-primary sm:col-span-2 sm:justify-self-start" type="submit">Send quote request</button>
