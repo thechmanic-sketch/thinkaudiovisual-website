@@ -115,6 +115,9 @@ import { whatsappHref } from '../data/site';
 
   /* Static modes (phone, or desktop with motion off): single screen, headline always visible */
   #flyby.static, #flyby.is-phone { height: 100vh !important; height: 100svh !important; }
+  /* The inner layer must match the section exactly. (h-screen = 100vh is taller than 100svh on phones
+     with an address bar, which pushed the buttons out under the equipment strip.) */
+  #flyby.static > .sticky, #flyby.is-phone > .sticky { position: relative; height: 100%; }
   #flyby.static .word, #flyby.is-phone .word, #flyby.static #scroll-hint, #flyby.is-phone #scroll-hint { display: none; }
   #flyby.static .phase-final, #flyby.is-phone .phase-final { opacity: 1; pointer-events: auto; }
   #flyby.static .phase-final .line-mask > span, #flyby.is-phone .phase-final .line-mask > span { transform: none; }
