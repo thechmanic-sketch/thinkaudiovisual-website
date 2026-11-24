@@ -30,6 +30,9 @@ import { whatsappHref } from '../data/site';
       preload="auto"
       poster={u('/flyby/f001.webp')}
     ></video>
+    <!-- Phones: exact copy of the video's last frame; the 20 s zoom runs on this still (smooth on phones) -->
+    <img id="flyby-hold" alt="" aria-hidden="true" decoding="async" />
+
     <div class="absolute inset-0 overlay-stage"></div>
     <div class="hero-fade-top"></div>
     <div class="hero-fade"></div>
@@ -74,7 +77,11 @@ import { whatsappHref } from '../data/site';
   /* Media layers: canvas on desktop scroll mode, video everywhere else */
   #flyby.is-desktop:not(.static) #flyby-video { display: none; }
   #flyby.is-phone #flyby-canvas, #flyby.static #flyby-canvas { display: none; }
-  #flyby-video { transform-origin: 50% 42%; will-change: transform; }
+  /* Hold still: sits exactly over the video; GPU-composited so the slow zoom stays smooth */
+  #flyby-hold { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; pointer-events: none;
+    transform-origin: 50% 44%; will-change: transform; backface-visibility: hidden; transform: translateZ(0); }
+  #flyby-hold.show { opacity: 1; }
+  #flyby.is-desktop #flyby-hold { display: none; }
 
   /* Loading progress under the scroll hint (desktop, first visit) */
   .flyby-progress { width: 80px; height: 2px; background: rgba(255,255,255,.18); overflow: hidden; opacity: 0; transition: opacity .4s; }
@@ -259,33 +266,44 @@ import { whatsappHref } from '../data/site';
       btn.hidden = false;
       let holding = false;       // last frame is being held
       let stopped = motionOff;   // visitor pressed Pause (or motion is off)
-      let holdTimer = 0, backTimer = 0;
-      const HOLD_MS = 20000, EASE_BACK_MS = 1400;
+      let holdTimer = 0;
+      const HOLD_MS = 20000, EASE_BACK_MS = 1600, ZOOM = 1.12;
+      const holdImg = document.getElementById('flyby-hold') as HTMLImageElement;
+      let zoomAnim: Animation | null = null;
 
-      const zoomTo = (transform: string, ms: number, easing: string) => {
-        video.style.transition = `transform ${ms}ms ${easing}`;
-        void video.offsetWidth; // commit the transition before changing transform (no rAF needed)
-        video.style.transform = transform;
+      // Hold sequence on the still image: slow push-in toward the logo, then ease back
+      const startHoldZoom = () => {
+        holdImg.classList.add('show');
+        zoomAnim?.cancel();
+        zoomAnim = holdImg.animate(
+          [
+            { transform: 'translateZ(0) scale(1)', offset: 0, easing: 'cubic-bezier(.37,0,.63,1)' },
+            { transform: `translateZ(0) scale(${ZOOM})`, offset: 1 - EASE_BACK_MS / HOLD_MS, easing: 'cubic-bezier(.65,0,.35,1)' },
+            { transform: 'translateZ(0) scale(1)', offset: 1 },
+          ],
+          { duration: HOLD_MS, fill: 'forwards' }
+        );
       };
-      const resetZoom = () => { video.style.transition = 'none'; video.style.transform = ''; };
+      const endHold = () => { zoomAnim?.cancel(); zoomAnim = null; holdImg.classList.remove('show'); };
 
       if (!desktop) {
-        // Phones: play once → hold last frame 20 s with a slow zoom + pan → ease back → replay
+        // Phones: play once → hold last frame 20 s (slow zoom on a still copy) → replay
         video.innerHTML = `<source src="${V}/hero-flyby-mobile.webm" type="video/webm"><source src="${V}/hero-flyby-mobile.mp4" type="video/mp4">`;
         video.poster = `${V}/hero-flyby-mobile-poster.jpg`;
         video.loop = false;
+        holdImg.src = `${V}/hero-flyby-end.webp`;
+        holdImg.onerror = () => { holdImg.onerror = null; holdImg.src = `${V}/hero-flyby-end.jpg`; };
         video.addEventListener('ended', () => {
           holding = true; sync();
-          clearTimeout(holdTimer); clearTimeout(backTimer);
-          // slow push-in toward the logo screen, drifting gently up and across
-          zoomTo('scale(1.16) translate(-2%, -2.5%)', HOLD_MS - EASE_BACK_MS, 'cubic-bezier(.45,0,.55,1)');
-          backTimer = window.setTimeout(() => zoomTo('scale(1) translate(0, 0)', EASE_BACK_MS, 'cubic-bezier(.65,0,.35,1)'), HOLD_MS - EASE_BACK_MS);
+          clearTimeout(holdTimer);
+          startHoldZoom();
           holdTimer = window.setTimeout(() => {
             holding = false;
             if (stopped) return;
-            resetZoom();
             video.currentTime = 0;
             video.play().catch(() => {});
+            // hide the still once the video is actually showing frames again (no flash)
+            video.addEventListener('playing', endHold, { once: true });
           }, HOLD_MS);
         });
       } else {
@@ -306,14 +324,16 @@ import { whatsappHref } from '../data/site';
       btn.addEventListener('click', () => {
         if (stopped || (video.paused && !holding)) {
           stopped = false;
-          if (holding || video.ended) { clearTimeout(holdTimer); clearTimeout(backTimer); holding = false; resetZoom(); video.currentTime = 0; }
+          if (holding || video.ended) {
+            clearTimeout(holdTimer); holding = false;
+            video.currentTime = 0;
+            video.addEventListener('playing', endHold, { once: true });
+          }
           video.play().catch(() => {});
         } else {
           stopped = true;
-          clearTimeout(holdTimer); clearTimeout(backTimer);
-          // freeze the zoom where it is
-          const now = getComputedStyle(video).transform;
-          video.style.transition = 'none'; video.style.transform = now === 'none' ? '' : now;
+          clearTimeout(holdTimer);
+          zoomAnim?.pause(); // freeze the zoom where it is
           video.pause();
         }
         sync();
